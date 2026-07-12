@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Corridor — Agentic Trade Settlement for Cross-Border SMEs, for Farside Payments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #fafaf8; --bg2: #f2f0eb; --bg3: #e8e5de;
+  --text: #1a1917; --text2: #5a5852; --text3: #8a8880;
+  --border: #d8d5ce; --border2: #c8c5be;
+  --amber: #b07010; --amber-bg: #fdf4e3; --amber-border: #e8c870;
+  --teal: #0a6b52; --teal-bg: #e8f5f0; --teal-border: #80c8b0;
+  --purple: #4a40b0; --purple-bg: #f0effe; --purple-border: #b0a8e8;
+  --coral: #b03820; --coral-bg: #fdf0ec; --coral-border: #e8a090;
+  --blue: #1850a0; --blue-bg: #eaf2fe; --blue-border: #90b8e8;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+  --r: 6px; --r-lg: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.7; }
+.page-wrap { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+.sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--bg2); border-right: 1px solid var(--border); padding: 2rem 1.25rem; display: flex; flex-direction: column; gap: 0; }
+.sidebar-logo { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.25rem; }
+.sidebar-project { font-family: var(--serif); font-size: 18px; color: var(--text); margin-bottom: 0.25rem; line-height: 1.2; }
+.sidebar-sub { font-size: 11px; color: var(--text3); margin-bottom: 2rem; line-height: 1.4; }
+.sidebar-nav { list-style: none; display: flex; flex-direction: column; gap: 1px; }
+.sidebar-nav a { display: block; font-size: 12px; color: var(--text2); text-decoration: none; padding: 5px 8px; border-radius: var(--r); transition: background 0.15s, color 0.15s; }
+.sidebar-nav a:hover { background: var(--bg3); color: var(--text); }
+.sidebar-nav a.active { background: var(--text); color: var(--bg); }
+.sidebar-nav .sub { padding-left: 20px; font-size: 11px; color: var(--text3); }
+.sidebar-nav .sub:hover { color: var(--text2); }
+.stack-block { margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.stack-title { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 0.75rem; }
+.stack-item { font-size: 11px; color: var(--text2); padding: 4px 0; border-bottom: 1px solid var(--border); line-height: 1.3; }
+.stack-item strong { display: block; color: var(--text); font-weight: 500; font-size: 11px; }
+
+.main { padding: 0; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 2.5rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(250,250,248,0.95); backdrop-filter: blur(8px); z-index: 100; }
+.topbar-breadcrumb { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.topbar-tag { font-family: var(--mono); font-size: 10px; padding: 3px 8px; background: var(--bg3); border-radius: 99px; color: var(--text2); }
+
+.content { padding: 3rem 2.5rem 5rem; max-width: 860px; }
+
+.doc-header { margin-bottom: 3rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+.doc-eyebrow { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.25rem; }
+.doc-eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.doc-title { font-family: var(--serif); font-size: clamp(28px, 4vw, 44px); font-weight: 400; line-height: 1.15; letter-spacing: -0.01em; color: var(--text); margin-bottom: 0.75rem; }
+.doc-title em { font-style: italic; color: var(--teal); }
+.doc-byline { font-size: 13px; color: var(--text3); display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 2rem; }
+.doc-disclaimer { font-size: 12px; color: var(--text3); font-style: italic; border-left: 2px solid var(--border2); padding-left: 12px; margin-bottom: 2rem; line-height: 1.6; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin: 0 0 2.5rem; }
+.stat-cell { padding: 1.25rem 1.5rem; border-right: 1px solid var(--border); background: white; }
+.stat-cell:last-child { border-right: none; }
+.stat-value { font-family: var(--serif); font-size: 30px; font-weight: 400; line-height: 1; margin-bottom: 4px; }
+.stat-value.amber { color: var(--amber); }
+.stat-value.teal { color: var(--teal); }
+.stat-value.purple { color: var(--purple); }
+.stat-value.coral { color: var(--coral); }
+.stat-label { font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.4; }
+
+.section { margin-bottom: 4.5rem; scroll-margin-top: 90px; }
+.section-heading { font-family: var(--serif); font-size: 27px; font-weight: 400; color: var(--text); margin-bottom: 1.25rem; display: flex; align-items: baseline; gap: 12px; }
+.section-num { font-family: var(--mono); font-size: 12px; color: var(--text3); }
+.section-kicker { font-style: italic; color: var(--text3); font-size: 14px; margin: -0.75rem 0 1.5rem; }
+.subsection-heading { font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--text); margin: 2.25rem 0 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; scroll-margin-top: 90px; }
+.subsection-heading::before { content: ''; display: block; width: 20px; height: 1px; background: var(--border2); }
+.body-text { font-size: 14.5px; line-height: 1.75; color: var(--text2); margin-bottom: 1rem; }
+.body-text strong { color: var(--text); font-weight: 500; }
+.body-text code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 1px 5px; border-radius: 3px; color: var(--text); }
+
+.callout { border-left: 2px solid var(--border2); padding: 1rem 1.25rem; margin: 1.5rem 0; background: var(--bg2); }
+.callout.amber { border-color: var(--amber-border); background: var(--amber-bg); }
+.callout.teal { border-color: var(--teal-border); background: var(--teal-bg); }
+.callout.purple { border-color: var(--purple-border); background: var(--purple-bg); }
+.callout.blue { border-color: var(--blue-border); background: var(--blue-bg); }
+.callout.coral { border-color: var(--coral-border); background: var(--coral-bg); }
+.callout-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 4px; }
+.callout.amber .callout-label { color: var(--amber); }
+.callout.teal .callout-label { color: var(--teal); }
+.callout.purple .callout-label { color: var(--purple); }
+.callout.blue .callout-label { color: var(--blue); }
+.callout.coral .callout-label { color: var(--coral); }
+.callout-body { font-size: 13.5px; line-height: 1.65; color: var(--text2); }
+.callout-body em { color: var(--text); font-style: italic; }
+
+.figure { margin: 2rem 0; }
+.figure-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px; }
+.figure-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.figure-sublabel { font-size: 12px; color: var(--text3); font-style: italic; margin-bottom: 0.75rem; }
+.figure-body { border: 1px solid var(--border); border-radius: var(--r-lg); background: white; padding: 1.5rem; overflow-x: auto; }
+.figure-note { font-size: 12px; color: var(--text3); margin-top: 0.5rem; font-style: italic; }
+
+.comp-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 1.5rem 0; }
+.comp-table th { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; background: var(--bg2); }
+.comp-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+.comp-table td:first-child { font-weight: 500; color: var(--text); }
+.comp-table tr:last-child td { border-bottom: none; }
+
+.card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1.5rem 0; }
+.p-card { border: 1px solid var(--border); border-radius: var(--r-lg); background: white; padding: 1.25rem 1.4rem; scroll-margin-top: 90px; }
+.p-card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem; }
+.p-card-name { font-family: var(--serif); font-size: 17px; color: var(--text); }
+.p-card-tag { font-family: var(--mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 99px; }
+.p-card-field { font-size: 12.5px; line-height: 1.6; margin-bottom: 6px; color: var(--text2); }
+.p-card-field strong { display: block; font-family: var(--mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 1px; }
+
+.adr-card { border: 1px solid var(--border); border-radius: var(--r-lg); background: white; padding: 1.25rem 1.5rem; margin-bottom: 1rem; scroll-margin-top: 90px; }
+.adr-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 8px; }
+.adr-id { font-family: var(--mono); font-size: 11px; color: var(--teal); font-weight: 500; }
+.adr-title { font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--text); }
+.adr-row { font-size: 12.5px; line-height: 1.6; color: var(--text2); margin-bottom: 6px; }
+.adr-row strong { color: var(--text); font-weight: 500; }
+
+.us-card { border-left: 2px solid var(--teal-border); background: var(--teal-bg); border-radius: 0 var(--r) var(--r) 0; padding: 0.9rem 1.1rem; margin-bottom: 0.75rem; }
+.us-id { font-family: var(--mono); font-size: 10px; color: var(--teal); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.us-story { font-size: 13.5px; color: var(--text); line-height: 1.6; margin-bottom: 6px; font-style: italic; }
+.us-ac { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+.pipeline-steps { display: flex; gap: 0; margin: 1.5rem 0; align-items: stretch; flex-wrap: wrap; }
+.pipe-step { flex: 1; min-width: 140px; border: 1px solid var(--border); border-right: none; padding: 1rem 0.875rem; background: white; position: relative; }
+.pipe-step:last-child { border-right: 1px solid var(--border); border-radius: 0 var(--r) var(--r) 0; }
+.pipe-step:first-child { border-radius: var(--r) 0 0 var(--r); }
+.pipe-num { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+.pipe-name { font-family: var(--sans); font-size: 12.5px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.pipe-owner { font-size: 11px; color: var(--text3); }
+
+.sim-box { border: 1px solid var(--border); border-radius: var(--r-lg); background: white; overflow: hidden; }
+.sim-scenarios { display: flex; gap: 8px; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; background: var(--bg2); }
+.scenario-btn { font-family: var(--mono); font-size: 11px; padding: 6px 12px; border: 1px solid var(--border2); border-radius: 99px; background: white; color: var(--text2); cursor: pointer; transition: all 0.15s; }
+.scenario-btn:hover { border-color: var(--teal-border); color: var(--teal); }
+.scenario-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.sim-desc { padding: 1rem 1.25rem; font-size: 12.5px; color: var(--text2); line-height: 1.6; border-bottom: 1px solid var(--border); }
+.sim-stages { display: flex; padding: 1.25rem; gap: 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.sim-stage { flex: 1; min-width: 90px; text-align: center; position: relative; padding: 0 6px; }
+.stage-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border2); margin: 0 auto 8px; transition: all 0.2s; }
+.stage-dot.running { background: var(--amber); border-color: var(--amber); animation: pulse 0.8s infinite; }
+.stage-dot.done { background: var(--teal); border-color: var(--teal); }
+.stage-dot.blocked { background: var(--coral); border-color: var(--coral); }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+.stage-name { font-family: var(--sans); font-size: 11px; font-weight: 500; color: var(--text); }
+.stage-owner { font-size: 9.5px; color: var(--text3); margin-top: 1px; }
+.stage-bar { height: 2px; background: var(--border); margin-top: 8px; overflow: hidden; }
+.stage-bar-fill { height: 100%; width: 0; background: var(--teal); transition: width 0.4s; }
+.stage-timing { font-family: var(--mono); font-size: 9.5px; color: var(--text3); margin-top: 4px; }
+.stage-timing.done { color: var(--teal); }
+.sim-controls { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--border); }
+.run-btn { font-family: var(--mono); font-size: 12px; padding: 7px 18px; background: var(--text); color: var(--bg); border: none; border-radius: var(--r); cursor: pointer; }
+.run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.sim-status { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+.sim-status.running { color: var(--amber); }
+.sim-status.done { color: var(--teal); }
+.sim-output { font-family: var(--mono); font-size: 12px; line-height: 1.8; padding: 1.25rem; background: #16150f; color: #d8d5ce; max-height: 340px; overflow-y: auto; }
+.out-line { display: block; }
+.out-comment { color: #7a8570; }
+.out-warn { color: #d8a84a; }
+.out-key { color: #8ba8c8; }
+.out-val { color: #d8d5ce; }
+
+.carousel { border: 1px solid var(--border); border-radius: var(--r-lg); background: white; overflow: hidden; }
+.carousel-nav { display: flex; gap: 4px; padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--bg2); overflow-x: auto; }
+.slide-btn { font-family: var(--mono); font-size: 10.5px; padding: 5px 10px; border: 1px solid var(--border2); border-radius: 99px; background: white; color: var(--text3); cursor: pointer; white-space: nowrap; }
+.slide-btn.active { background: var(--purple); color: white; border-color: var(--purple); }
+.slide-panel { display: none; padding: 2.5rem; min-height: 320px; }
+.slide-panel.active { display: block; }
+.slide-headline { font-family: var(--serif); font-size: 22px; color: var(--text); margin-bottom: 0.5rem; line-height: 1.25; }
+.slide-sub { font-size: 13px; color: var(--text3); margin-bottom: 1.25rem; }
+.slide-note { font-size: 12.5px; color: var(--text2); background: var(--bg2); border-left: 2px solid var(--purple-border); padding: 0.75rem 1rem; margin-top: 1.25rem; font-style: italic; }
+
+.cost-summary { display: flex; gap: 1rem; align-items: flex-start; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--bg2); padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+.cost-summary-icon { color: var(--amber); flex-shrink: 0; margin-top: 2px; }
+.cost-summary-body { font-size: 13.5px; line-height: 1.7; color: var(--text2); }
+.sources-note { margin: 1.5rem 0; padding: 1rem 1.25rem; border: 1px solid var(--border); border-radius: var(--r-lg); background: white; }
+.sources-note-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 0.5rem; }
+.sources-note-body { font-size: 11.5px; color: var(--text3); line-height: 1.7; }
+
+.dbox { fill: white; stroke: var(--border2); stroke-width: 1.5; }
+.dbox-agent { fill: var(--teal-bg); stroke: var(--teal-border); stroke-width: 1.5; }
+.dbox-ext { fill: var(--blue-bg); stroke: var(--blue-border); stroke-width: 1.5; }
+.dbox-reg { fill: var(--amber-bg); stroke: var(--amber-border); stroke-width: 1.5; }
+.dbox-gate { fill: var(--coral-bg); stroke: var(--coral-border); stroke-width: 1.5; }
+.dtext { font-family: 'Inter', sans-serif; fill: var(--text); }
+.dtext-sm { font-family: 'IBM Plex Mono', monospace; fill: var(--text3); }
+.darrow { stroke: var(--text3); stroke-width: 1.3; fill: none; marker-end: url(#arrow); }
+.darrow-dash { stroke: var(--coral); stroke-width: 1.3; fill: none; stroke-dasharray: 4 3; marker-end: url(#arrow); }
+
+footer.doc-footer { border-top: 1px solid var(--border); padding: 2.5rem; text-align: center; font-size: 12px; color: var(--text3); font-style: italic; }
+
+@media (max-width: 900px) {
+  .page-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; }
+  .card-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<nav class="sidebar">
+  <div class="sidebar-logo">Farside Payments</div>
+  <div class="sidebar-project">Corridor</div>
+  <div class="sidebar-sub">Agentic Trade Settlement for Cross-Border SMEs — living design document</div>
+  <ul class="sidebar-nav">
+    <li><a href="#s1">01 · Client Brief</a></li>
+    <li><a href="#s2">02 · Stakeholder Profiles</a></li>
+    <li><a href="#s2-anchor" class="sub">Anchor Case</a></li>
+    <li><a href="#s3">03 · Problem Statement</a></li>
+    <li><a href="#s4">04 · As-Is Process</a></li>
+    <li><a href="#s5">05 · Regulatory &amp; Market Exposure</a></li>
+    <li><a href="#s6">06 · User Stories</a></li>
+    <li><a href="#s7">07 · Proposed Design</a></li>
+    <li><a href="#s8">08 · Simulation</a></li>
+    <li><a href="#s9">09 · Success Metrics</a></li>
+    <li><a href="#s10">10 · ADRs</a></li>
+    <li><a href="#s11">11 · Objection Handling</a></li>
+    <li><a href="#s12">12 · Cost Analysis</a></li>
+    <li><a href="#s13">13 · Rollout Roadmap</a></li>
+    <li><a href="#s14">14 · Stakeholder Deck</a></li>
+  </ul>
+  <div class="stack-block">
+    <div class="stack-title">Register</div>
+    <div class="stack-item"><strong>5 Gated Components</strong>A2A negotiation \u2192 AP2 settlement</div>
+    <div class="stack-item"><strong>6 ADRs</strong>rationale, rejected alternatives</div>
+    <div class="stack-item"><strong>3 Jurisdictions</strong>UK · EU · US — none of them optional</div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">farside-payments / corridor / design-doc</div>
+    <div class="topbar-right"><span class="topbar-tag">fictional client — portfolio artefact</span></div>
+  </div>
+
+  <div class="content">
+
+  <header class="doc-header" id="top">
+    <div class="doc-eyebrow">Living design document</div>
+    <h1 class="doc-title">Corridor <em>— Agentic Trade Settlement<br/>for Cross-Border SMEs</em></h1>
+    <div class="doc-byline">
+      <span>Client: Farside Payments Ltd</span>
+      <span>Sponsor: Priya Shah, Chief Product Officer</span>
+      <span>Track: A2A / AP2 Agentic Commerce — UK / EU / US</span>
+    </div>
+    <div class="doc-disclaimer">Farside Payments, every named stakeholder, and the anchor case in §2 are fictional constructs built for this portfolio piece. The Agent2Agent (A2A) and Agent Payments Protocol (AP2) specifications, their cited mechanics, and the EU AI Act, MiCA, UK payment services regulation, and US GENIUS Act references throughout are real and current as of mid-2026. This document is an architecture exercise, not legal, regulatory, or financial advice — the mapping in §7 and §5 would need confirmation from qualified counsel in each jurisdiction before any real implementation.</div>
+    <div class="stat-grid">
+      <div class="stat-cell"><div class="stat-value coral">5%+</div><div class="stat-label">Of transaction value SMEs pay on cross-border B2B payments today</div></div>
+      <div class="stat-cell"><div class="stat-value amber">3</div><div class="stat-label">Regulatory regimes engaged by one settlement — UK, EU, US</div></div>
+      <div class="stat-cell"><div class="stat-value purple">5</div><div class="stat-label">Gated components, each with exactly one job</div></div>
+      <div class="stat-cell"><div class="stat-value teal">2</div><div class="stat-label">Protocols doing the real work — A2A negotiates, AP2 settles</div></div>
+    </div>
+  </header>
+
+  <!-- ============ SECTION 1 ============ -->
+  <section class="section" id="s1">
+    <h2 class="section-heading"><span class="section-num">01</span> Client Brief</h2>
+    <p class="section-kicker">Farside Payments — the anchor client.</p>
+
+    <p class="body-text">A composite of real UK/EU cross-border payments fintech patterns. Farside Payments Ltd is a London-headquartered e-money institution, authorised by the FCA, with an Irish subsidiary — Farside Payments (EU) Ltd, authorised by the Central Bank of Ireland — that passports its services across the EU. Farside serves roughly 28,000 SME customers who trade internationally, processing approximately £1.9 billion in cross-border payment volume a year, primarily UK–EU and UK–US corridors. Chief Product Officer Priya Shah is sponsoring an exploration of agentic settlement — using Google's A2A and AP2 protocols to let an SME's procurement process negotiate and settle directly, agent to agent — as a way to compress cost and settlement time on corridors that have resisted improvement for a decade.</p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0;">
+      <div class="figure-body">
+        <table class="comp-table">
+          <tr><td>Legal name</td><td>Farside Payments Ltd</td></tr>
+          <tr><td>UK regulator</td><td>FCA — e-money institution</td></tr>
+          <tr><td>EU entity</td><td>Farside Payments (EU) Ltd, Central Bank of Ireland</td></tr>
+          <tr><td>SME customers</td><td>~28,000</td></tr>
+        </table>
+      </div>
+      <div class="figure-body">
+        <table class="comp-table">
+          <tr><td>Annual cross-border volume</td><td>~£1.9bn</td></tr>
+          <tr><td>Primary corridors</td><td>UK–EU, UK–US</td></tr>
+          <tr><td>Current rails</td><td>Correspondent banking + 2 FX partners</td></tr>
+          <tr><td>Settlement mechanism explored</td><td>A2A negotiation + AP2 mandates, incl. stablecoin rail</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-label">What the brief is, precisely</div>
+      <div class="callout-body">Not a new payment rail, and not a fully autonomous treasury. Corridor lets an SME's procurement agent negotiate purchase terms directly with a supplier's agent over A2A, and settle through AP2's signed Mandate chain — with every negotiated term re-checked against the customer's own pre-authorised limits before a payment is ever signed, and every out-of-bounds case routed to a human.</div>
+    </div>
+
+    <div class="figure">
+      <div class="figure-label">Fig. 1.1 — System Context</div>
+      <div class="figure-sublabel">C4 Level 1. Three regulatory regimes touch one transaction — that's the finding this document works from, not a design choice.</div>
+      <div class="figure-body">
+        <svg viewBox="0 0 820 320" width="100%">
+          <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--text3)"/></marker></defs>
+          <rect x="300" y="120" width="220" height="80" rx="8" class="dbox" stroke-width="2"/>
+          <text x="410" y="155" text-anchor="middle" class="dtext" font-size="14" font-weight="600">Farside Payments</text>
+          <text x="410" y="173" text-anchor="middle" class="dtext-sm" font-size="10">the organisation</text>
+
+          <rect x="30" y="30" width="150" height="55" rx="6" class="dbox"/>
+          <text x="105" y="53" text-anchor="middle" class="dtext" font-size="11">SME buyer</text>
+          <text x="105" y="68" text-anchor="middle" class="dtext-sm" font-size="9">Halvorsen &amp; Cole, UK</text>
+          <path d="M120,85 L340,120" class="darrow"/>
+
+          <rect x="30" y="235" width="150" height="55" rx="6" class="dbox-ext"/>
+          <text x="105" y="253" text-anchor="middle" class="dtext" font-size="11">Supplier agent</text>
+          <text x="105" y="268" text-anchor="middle" class="dtext-sm" font-size="9">BrunnerTeknik, DE — via A2A</text>
+          <path d="M120,235 L340,200" class="darrow"/>
+
+          <rect x="640" y="30" width="150" height="55" rx="6" class="dbox-reg"/>
+          <text x="715" y="53" text-anchor="middle" class="dtext" font-size="11">FCA / UK PSR</text>
+          <text x="715" y="68" text-anchor="middle" class="dtext-sm" font-size="9">payment services</text>
+          <path d="M700,85 L480,120" class="darrow" stroke-dasharray="3 3"/>
+
+          <rect x="600" y="235" width="190" height="55" rx="6" class="dbox-reg"/>
+          <text x="695" y="253" text-anchor="middle" class="dtext" font-size="10.5">EU — MiCA / AI Act Art.50</text>
+          <text x="695" y="268" text-anchor="middle" class="dtext-sm" font-size="9">stablecoin + agent transparency</text>
+          <path d="M660,235 L480,200" class="darrow" stroke-dasharray="3 3"/>
+
+          <rect x="330" y="235" width="150" height="55" rx="6" class="dbox-reg"/>
+          <text x="405" y="253" text-anchor="middle" class="dtext" font-size="10.5">US — GENIUS Act</text>
+          <text x="405" y="268" text-anchor="middle" class="dtext-sm" font-size="9">via stablecoin issuer</text>
+          <path d="M405,235 L405,202" class="darrow" stroke-dasharray="3 3"/>
+
+          <rect x="640" y="140" width="150" height="55" rx="6" class="dbox-ext"/>
+          <text x="715" y="163" text-anchor="middle" class="dtext" font-size="11">Stablecoin issuer</text>
+          <text x="715" y="178" text-anchor="middle" class="dtext-sm" font-size="9">GENIUS-regulated PPSI</text>
+          <path d="M638,167 L522,150" class="darrow"/>
+        </svg>
+      </div>
+      <div class="figure-note">Three dashed regulatory connections into one UK–EU transaction — none of them avoidable once a stablecoin rail is in play.</div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 2 ============ -->
+  <section class="section" id="s2">
+    <h2 class="section-heading"><span class="section-num">02</span> Stakeholder Profiles</h2>
+    <p class="section-kicker">Five people inside Farside, one SME customer who never wants to think about any of this.</p>
+    <p class="body-text">Template used throughout: <strong>Goal · Measured by · Resistance · Success looks like.</strong></p>
+
+    <div class="card-grid">
+      <div class="p-card" id="p-shah"><div class="p-card-head"><span class="p-card-name">Priya Shah</span><span class="p-card-tag" style="background:var(--purple-bg);color:var(--purple)">Chief Product Officer, Sponsor</span></div>
+        <div class="p-card-field"><strong>Goal</strong>A settlement product that measurably beats correspondent banking on cost and time, without becoming Farside's first payments-trust incident.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Settlement cost and time versus baseline; customer adoption; zero unauthorised-payment incidents.</div>
+        <div class="p-card-field"><strong>Resistance</strong>A single high-profile failure here would damage trust across Farside's entire book, not just this product.</div>
+        <div class="p-card-field"><strong>Success</strong>A narrow, safe pilot corridor proving the model before it's anywhere near Farside's full customer base.</div></div>
+
+      <div class="p-card" id="p-okafor"><div class="p-card-head"><span class="p-card-name">Daniel Okafor</span><span class="p-card-tag" style="background:var(--coral-bg);color:var(--coral)">Head of Compliance &amp; MLRO</span></div>
+        <div class="p-card-field"><strong>Goal</strong>Every agentic payment screened to the same AML/sanctions standard as a human-initiated one — no exceptions for speed.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Screening coverage; regulator and audit findings; false-negative rate on sanctions checks.</div>
+        <div class="p-card-field"><strong>Resistance</strong>Will not accept compliance screening embedded inside an LLM's reasoning where he can't isolate and test it independently.</div>
+        <div class="p-card-field"><strong>Success</strong>A screening step he can point to, test in isolation, and defend to the FCA on its own terms.</div></div>
+
+      <div class="p-card" id="p-sandberg"><div class="p-card-head"><span class="p-card-name">Elin Sandberg</span><span class="p-card-tag" style="background:var(--blue-bg);color:var(--blue)">Head of Treasury &amp; Payments Ops</span></div>
+        <div class="p-card-field"><strong>Goal</strong>Full visibility into every rail decision and liquidity movement, whether a human or an agent triggered it.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Liquidity forecast accuracy; rail-selection cost efficiency; operational incident rate.</div>
+        <div class="p-card-field"><strong>Resistance</strong>Worried autonomous settlement becomes a blind spot in her liquidity dashboard if it isn't wired into the same visibility she already has.</div>
+        <div class="p-card-field"><strong>Success</strong>Every agent-executed payment appears in her existing dashboard in real time — no second system to watch.</div></div>
+
+      <div class="p-card" id="p-meehan"><div class="p-card-head"><span class="p-card-name">Conor Meehan</span><span class="p-card-tag" style="background:var(--amber-bg);color:var(--amber)">EU Compliance Lead</span></div>
+        <div class="p-card-field"><strong>Goal</strong>Clarity on whether Farside's role in rail selection makes it a crypto-asset service provider under MiCA, or purely a payment initiator.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Regulatory classification certainty; Central Bank of Ireland relationship.</div>
+        <div class="p-card-field"><strong>Resistance</strong>An unresolved classification question is not something architecture alone can close.</div>
+        <div class="p-card-field"><strong>Success</strong>A legal determination secured before Phase 2 expands beyond the pilot corridor.</div></div>
+
+      <div class="p-card" id="p-tan"><div class="p-card-head"><span class="p-card-name">Mei Lin Tan</span><span class="p-card-tag" style="background:var(--teal-bg);color:var(--teal)">Security &amp; Trust Engineering Lead</span></div>
+        <div class="p-card-field"><strong>Goal</strong>A negotiated Cart Mandate can never be trusted just because it's cryptographically signed — signing proves who agreed, not that what they agreed to is safe.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Mandate Integrity Gate catch rate; red-team findings actioned; zero silent scope-drift incidents.</div>
+        <div class="p-card-field"><strong>Resistance</strong>Published research already shows AP2 secures what is executed but not how the negotiation reached that point — she assumes adversarial input by default.</div>
+        <div class="p-card-field"><strong>Success</strong>A negotiation transcript designed to manipulate the Cart Mandate gets caught before signature, every time, in testing.</div></div>
+
+      <div class="p-card" id="p-halvorsen" style="grid-column:span 2"><div class="p-card-head"><span class="p-card-name">Tom Halvorsen</span><span class="p-card-tag" style="background:var(--purple-bg);color:var(--purple)">SME Customer — Halvorsen &amp; Cole Fabrication</span></div>
+        <div class="p-card-field"><strong>Goal</strong>Pay his supplier reliably and know the money arrived — he has no interest in understanding stablecoins, mandates, or settlement rails.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Payment reliability; cost versus his current bank; how much he has to think about it.</div>
+        <div class="p-card-field"><strong>Resistance</strong>Has been burned before by a "modern" payments product that turned out to need more manual intervention than his old bank.</div>
+        <div class="p-card-field"><strong>Success</strong>He sets a budget once, approves a supplier once, and every quarter's restock order just happens — in GBP out, EUR in, nothing else visible to him.</div></div>
+    </div>
+
+    <h3 class="subsection-heading" id="s2-anchor">Anchor Case</h3>
+    <p class="body-text">One transaction is followed through this document.</p>
+    <div class="p-card" style="margin-bottom:1.5rem;">
+      <div class="p-card-head"><span class="p-card-name">Order #FP-88213</span><span class="p-card-tag" style="background:var(--teal-bg);color:var(--teal)">Halvorsen &amp; Cole (UK) → BrunnerTeknik GmbH (DE) · €340,000</span></div>
+      <div class="p-card-field"><strong>Context</strong>A quarterly restocking order for precision CNC components, from an approved, previously-used supplier, within Halvorsen &amp; Cole's pre-authorised procurement budget for the quarter.</div>
+      <div class="p-card-field"><strong>What it tests</strong>Whether a routine, in-policy negotiation can settle without a human touching it, and whether the Mandate Integrity Gate correctly holds a case where the negotiated price drifts outside the pre-authorised ceiling — shown in §8.</div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 3 ============ -->
+  <section class="section" id="s3">
+    <h2 class="section-heading"><span class="section-num">03</span> Problem Statement</h2>
+    <p class="section-kicker">The negotiation and the payment happen in two different worlds, connected by nothing but a human retyping numbers.</p>
+    <p class="body-text">Today, Tom Halvorsen's finance lead emails BrunnerTeknik, agrees a price, receives an invoice, and manually initiates a payment through Farside's portal — three separate systems, with no structured link between what was actually negotiated and what was actually paid. The commercial agreement lives in an email thread; the payment authorization lives in a portal; nothing connects them except a person copying numbers across, and every step of that chain is exactly where cost, delay, and error accumulate.</p>
+
+    <div class="callout coral">
+      <div class="callout-label">Failure 1 — The rail is expensive because nobody's shopping it</div>
+      <div class="callout-body">A wire goes out via whichever bank relationship exists, at whatever rate is quoted that day — cost and speed are accepted, not chosen.</div>
+    </div>
+    <div class="callout amber">
+      <div class="callout-label">Failure 2 — The negotiation and the payment have no structural link</div>
+      <div class="callout-body">Nothing verifies that what was actually paid matches what was actually agreed — a manually re-keyed figure is trusted, not checked against the original terms.</div>
+    </div>
+    <div class="callout purple">
+      <div class="callout-label">Failure 3 — Every order repeats the same manual cycle</div>
+      <div class="callout-body">A routine, previously-approved quarterly reorder with a known supplier still requires the same manual negotiation-to-payment cycle as a first-time purchase.</div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-label">Precise problem statement</div>
+      <div class="callout-body"><em>Farside's SME customers have no mechanism connecting a negotiated commercial agreement to its eventual payment as a single, verifiable, rail-optimised transaction — so routine, in-policy trade is priced and timed as if it were a first-time, unstructured negotiation, every single time.</em></div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 4 ============ -->
+  <section class="section" id="s4">
+    <h2 class="section-heading"><span class="section-num">04</span> As-Is Process</h2>
+    <div class="figure">
+      <div class="figure-label">Fig. 4.1 — As-Is Order-to-Settlement Flow</div>
+      <div class="figure-sublabel">Three disconnected systems; a human is the only thing linking them.</div>
+      <div class="figure-body">
+        <svg viewBox="0 0 820 220" width="100%">
+          <rect x="20" y="80" width="150" height="60" rx="6" class="dbox"/>
+          <text x="95" y="106" text-anchor="middle" class="dtext" font-size="10.5">Email negotiation</text>
+          <text x="95" y="122" text-anchor="middle" class="dtext-sm" font-size="8.5">Halvorsen \u2194 BrunnerTeknik</text>
+
+          <rect x="230" y="80" width="150" height="60" rx="6" class="dbox-ext"/>
+          <text x="305" y="106" text-anchor="middle" class="dtext" font-size="10.5">Invoice issued</text>
+          <text x="305" y="122" text-anchor="middle" class="dtext-sm" font-size="8.5">PDF, no structured link back</text>
+          <path d="M170,110 L228,110" class="darrow"/>
+
+          <rect x="440" y="80" width="150" height="60" rx="6" class="dbox-ext"/>
+          <text x="515" y="106" text-anchor="middle" class="dtext" font-size="10.5">Farside portal</text>
+          <text x="515" y="122" text-anchor="middle" class="dtext-sm" font-size="8.5">manually re-keyed</text>
+          <path d="M380,110 L438,110" class="darrow"/>
+
+          <rect x="650" y="80" width="150" height="60" rx="6" class="dbox"/>
+          <text x="725" y="106" text-anchor="middle" class="dtext" font-size="10.5">Correspondent wire</text>
+          <text x="725" y="122" text-anchor="middle" class="dtext-sm" font-size="8.5">2\u20134 days, cost accepted</text>
+          <path d="M590,110 L648,110" class="darrow"/>
+        </svg>
+      </div>
+      <div class="figure-note">Every arrow is a human, retyping. Nothing here verifies that step four matches step one.</div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 5 ============ -->
+  <section class="section" id="s5">
+    <h2 class="section-heading"><span class="section-num">05</span> Regulatory &amp; Market Exposure</h2>
+    <p class="section-kicker">Three regimes, none of them optional, none of them fully settled yet.</p>
+
+    <p class="body-text">The market cost case is stark: SMEs pay well over 5% of transaction value on cross-border B2B payments, against 1–3% for large corporates, and 62% report delays and added cost from navigating over 190 different regulatory regimes worldwide. Correspondent banking's structural cost is opacity as much as fee — value is deducted mid-chain without clear signal to either party, and reconciliation absorbs time that should go toward running the business. Modern rails, including real-time and stablecoin settlement, are shown to cut cross-border costs by 60% or more where they're genuinely available end to end.</p>
+
+    <h3 class="subsection-heading">UK</h3>
+    <p class="body-text">Farside's payment initiation activity sits under FCA authorisation and Payment Systems Regulator oversight — the baseline that already applies regardless of which rail a transaction ultimately settles through.</p>
+
+    <h3 class="subsection-heading">EU</h3>
+    <p class="body-text">The stablecoin leg of any EU-facing settlement sits inside MiCA's framework for crypto-asset activity, and an AI agent representing an SME in a financial transaction plausibly triggers the EU AI Act's Article 50 transparency duty — the counterparty needs to know it's dealing with an agent, not a person. SEPA Instant's planned removal of its per-transaction cap is expected to unlock corporate-scale adoption on the fiat side of this corridor too.</p>
+
+    <h3 class="subsection-heading">US — the jurisdiction with no US counterparty in the transaction</h3>
+    <p class="body-text">The GENIUS Act, the first US federal framework for payment stablecoins, restricts issuance to permitted payment stablecoin issuers and treats them as financial institutions under the Bank Secrecy Act — meaning an issuer must run anti-money-laundering and OFAC sanctions compliance. Because most liquid, high-volume stablecoins in practical use are USD-denominated and issued by US-regulated entities, a UK–EU trade settling through a stablecoin rail very likely routes through a GENIUS-regulated issuer — importing US regulatory obligations into a transaction with no US party at all. A proposed federal rule would additionally require redemption within two business days, a concrete SLA this design can test against directly. The Act's own effective date is still moving — the earlier of eighteen months after its July 2025 enactment, or 120 days after final implementing regulations, which were still mid-rulemaking as of early 2026.</p>
+
+    <div class="sources-note">
+      <div class="sources-note-label">Regulatory &amp; Market Sources</div>
+      <div class="sources-note-body">
+        McKinsey, cross-border B2B payment cost by enterprise size. SME regulatory-regime friction and cross-border cost-reduction figures, industry cross-border payments reporting, 2026.<br>
+        EU AI Act (Regulation (EU) 2024/1689), Article 50 — transparency obligations for AI systems interacting with natural persons.<br>
+        Markets in Crypto-Assets Regulation (MiCA), EU.<br>
+        GENIUS Act (Guiding and Establishing National Innovation for U.S. Stablecoins Act), enacted 18 July 2025 — issuer restrictions, BSA/AML and OFAC obligations, proposed FDIC/OCC redemption and reserve rules, 2026 rulemaking.<br>
+        UK Financial Conduct Authority and Payment Systems Regulator — payment services and e-money oversight.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 6 ============ -->
+  <section class="section" id="s6">
+    <h2 class="section-heading"><span class="section-num">06</span> User Stories</h2>
+
+    <div class="us-card"><div class="us-id">US-01 · SME Customer</div>
+      <div class="us-story">As an SME buyer, I want a routine, in-policy reorder with an approved supplier to settle without my intervention, so that I stop re-running the same manual process every quarter.</div>
+      <div class="us-ac">Acceptance: settlement occurs automatically only within limits I set once, up front; anything outside those limits comes to me for approval.</div></div>
+
+    <div class="us-card"><div class="us-id">US-02 · Head of Compliance &amp; MLRO</div>
+      <div class="us-story">As MLRO, I want every agentic payment screened against sanctions and AML checks as a discrete, testable step, so that I can defend the control to a regulator independent of how the negotiation happened.</div>
+      <div class="us-ac">Acceptance: the Compliance Screening Gate is a separate deterministic step, not a consideration folded into an LLM's reasoning.</div></div>
+
+    <div class="us-card"><div class="us-id">US-03 · Security &amp; Trust Engineering Lead</div>
+      <div class="us-story">As the security lead, I want the negotiated Cart Mandate independently re-validated against the original Intent Mandate, so that a manipulated negotiation can never reach signature.</div>
+      <div class="us-ac">Acceptance: the Mandate Integrity Gate never trusts the Negotiation Agent's own self-report of what it agreed — it re-derives compliance from the raw negotiated terms.</div></div>
+
+    <div class="us-card"><div class="us-id">US-04 · Head of Treasury &amp; Payments Ops</div>
+      <div class="us-story">As Head of Treasury, I want every rail selection and executed payment visible in my existing liquidity dashboard in real time, so that agentic settlement never becomes a blind spot.</div>
+      <div class="us-ac">Acceptance: no second dashboard — the Rail Selection Engine and Payment Execution Agent write to Sandberg's existing system.</div></div>
+
+    <div class="us-card"><div class="us-id">US-05 · EU Compliance Lead</div>
+      <div class="us-story">As EU Compliance Lead, I want Farside's regulatory role in rail selection classified clearly before this expands past the pilot corridor, so that we aren't operating as an unlicensed crypto-asset service provider by accident.</div>
+      <div class="us-ac">Acceptance: legal determination secured and documented before Phase 2 begins.</div></div>
+  </section>
+
+  <!-- ============ SECTION 7 ============ -->
+  <section class="section" id="s7">
+    <h2 class="section-heading"><span class="section-num">07</span> Proposed Design</h2>
+    <p class="section-kicker">Five gated components. A2A negotiates. AP2 settles. Nothing signs a payment without independent re-verification.</p>
+
+    <div class="pipeline-steps">
+      <div class="pipe-step"><div class="pipe-num">01</div><div class="pipe-name">Negotiation Agent</div><div class="pipe-owner">LLM · A2A, speaks to supplier's agent</div></div>
+      <div class="pipe-step"><div class="pipe-num">02</div><div class="pipe-name">Mandate Integrity Gate</div><div class="pipe-owner">Deterministic · re-checks Cart vs. Intent</div></div>
+      <div class="pipe-step"><div class="pipe-num">03</div><div class="pipe-name">Compliance Screening Gate</div><div class="pipe-owner">Deterministic · sanctions / AML</div></div>
+      <div class="pipe-step"><div class="pipe-num">04</div><div class="pipe-name">Rail Selection Engine</div><div class="pipe-owner">Deterministic · cost/speed per corridor</div></div>
+      <div class="pipe-step"><div class="pipe-num">05</div><div class="pipe-name">Payment Execution Agent</div><div class="pipe-owner">AP2 · signs &amp; submits Payment Mandate</div></div>
+    </div>
+
+    <div class="figure">
+      <div class="figure-label">Fig. 7.1 — Negotiation-to-Settlement Graph</div>
+      <div class="figure-sublabel">The Mandate Integrity Gate never trusts the Negotiation Agent's own report — it re-derives compliance independently, because that agent's context is the one most exposed to the counterparty's input.</div>
+      <div class="figure-body">
+        <svg viewBox="0 0 820 260" width="100%">
+          <rect x="20" y="100" width="150" height="55" rx="6" class="dbox-agent"/>
+          <text x="95" y="122" text-anchor="middle" class="dtext" font-size="10.5">Negotiation Agent</text>
+          <text x="95" y="138" text-anchor="middle" class="dtext-sm" font-size="8.5">A2A, vs. supplier agent</text>
+
+          <rect x="220" y="100" width="160" height="55" rx="6" class="dbox-gate"/>
+          <text x="300" y="122" text-anchor="middle" class="dtext" font-size="10">Mandate Integrity Gate</text>
+          <text x="300" y="138" text-anchor="middle" class="dtext-sm" font-size="8.5">Cart vs. Intent, independent</text>
+          <path d="M170,127 L218,127" class="darrow"/>
+          <path d="M300,98 L300,60 L95,60 L95,98" class="darrow-dash"/>
+
+          <rect x="20" y="10" width="150" height="45" rx="6" class="dbox-reg"/>
+          <text x="95" y="28" text-anchor="middle" class="dtext" font-size="9.5">Tier 2: human approval</text>
+          <text x="95" y="42" text-anchor="middle" class="dtext-sm" font-size="8">out-of-bounds negotiation</text>
+
+          <rect x="420" y="100" width="150" height="55" rx="6" class="dbox-gate"/>
+          <text x="495" y="122" text-anchor="middle" class="dtext" font-size="10.5">Compliance Gate</text>
+          <text x="495" y="138" text-anchor="middle" class="dtext-sm" font-size="8.5">sanctions / AML, deterministic</text>
+          <path d="M380,127 L418,127" class="darrow"/>
+
+          <rect x="610" y="100" width="150" height="55" rx="6" class="dbox-agent"/>
+          <text x="685" y="122" text-anchor="middle" class="dtext" font-size="10.5">Rail Selection</text>
+          <text x="685" y="138" text-anchor="middle" class="dtext-sm" font-size="8.5">cost/speed, deterministic</text>
+          <path d="M570,127 L608,127" class="darrow"/>
+
+          <rect x="420" y="200" width="340" height="50" rx="6" class="dbox-agent"/>
+          <text x="590" y="220" text-anchor="middle" class="dtext" font-size="10.5">Payment Execution Agent</text>
+          <text x="590" y="235" text-anchor="middle" class="dtext-sm" font-size="8.5">signs &amp; submits AP2 Payment Mandate</text>
+          <path d="M685,155 L685,198" class="darrow"/>
+        </svg>
+      </div>
+    </div>
+
+    <h3 class="subsection-heading">Tier 1 / Tier 2 — a deliberate contrast with the previous project in this portfolio</h3>
+    <p class="body-text">Lumen (life &amp; health underwriting, elsewhere in this portfolio) always requires a human signature — there is no pre-authorisation concept in that domain that could substitute for one. Corridor is different, and the difference is legitimate: AP2's Intent Mandate <strong>is</strong> a genuine human authorisation, given once, up front, with explicit bounds. <strong>Tier 1</strong> — the negotiated Cart Mandate falls strictly within those pre-authorised bounds, and passes both gates — executes without further human involvement, exactly as AP2 is designed to support for delegated tasks. <strong>Tier 2</strong> — any negotiated term outside those bounds, any compliance screening hit, or any Mandate Integrity Gate failure — routes to Halvorsen for manual Cart Mandate approval before anything is signed. The distinction from Lumen isn't a lower safety bar; it's a different, and equally real, prior human authorisation event.</p>
+
+    <h3 class="subsection-heading">Regulatory mapping</h3>
+    <table class="comp-table">
+      <tr><th>Regime</th><th>Obligation</th><th>Corridor mechanism</th></tr>
+      <tr><td>UK — FCA / PSR</td><td>Payment initiation conduct standards</td><td>Payment Execution Agent operates under Farside's existing authorisation; no new regulatory perimeter crossed on the fiat leg</td></tr>
+      <tr><td>EU — MiCA</td><td>Crypto-asset activity oversight</td><td>Rail Selection Engine's stablecoin routing logged and reviewable; Meehan's classification determination gates Phase 2</td></tr>
+      <tr><td>EU — AI Act Art. 50</td><td>Transparency when an AI system interacts with a person</td><td>Supplier counterparty and its human operators are informed they are negotiating with an agent, not a person</td></tr>
+      <tr><td>US — GENIUS Act</td><td>BSA/AML and OFAC obligations at the issuer level; proposed 2-day redemption SLA</td><td>Compliance Screening Gate runs sanctions checks independent of the issuer's own program; redemption timing monitored against the proposed SLA</td></tr>
+    </table>
+    <p class="body-text" style="font-size:12px;color:var(--text3);font-style:italic;">This table is an architectural mapping for design discussion, not a conformity or regulatory assessment.</p>
+  </section>
+
+  <!-- ============ SECTION 8 ============ -->
+  <section class="section" id="s8">
+    <h2 class="section-heading"><span class="section-num">08</span> Simulation</h2>
+    <p class="section-kicker">Order #FP-88213 run twice — once in policy, once with a negotiated term pushed outside it.</p>
+
+    <div class="sim-box">
+      <div class="sim-scenarios">
+        <button class="scenario-btn active" onclick="selectScenario(0)">#FP-88213 — in policy, Tier 1</button>
+        <button class="scenario-btn" onclick="selectScenario(1)">#FP-88214 — price drift, Tier 2</button>
+      </div>
+      <div class="sim-desc" id="sim-desc">Routine quarterly reorder, approved supplier, negotiated terms within pre-authorised budget.</div>
+      <div class="sim-stages">
+        <div class="sim-stage"><div class="stage-dot" id="dot-0"></div><div class="stage-name">Negotiate</div><div class="stage-owner">A2A</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-0"></div></div><div class="stage-timing" id="tim-0">—</div></div>
+        <div class="sim-stage"><div class="stage-dot" id="dot-1"></div><div class="stage-name">Mandate Gate</div><div class="stage-owner">independent</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-1"></div></div><div class="stage-timing" id="tim-1">—</div></div>
+        <div class="sim-stage"><div class="stage-dot" id="dot-2"></div><div class="stage-name">Compliance</div><div class="stage-owner">sanctions/AML</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-2"></div></div><div class="stage-timing" id="tim-2">—</div></div>
+        <div class="sim-stage"><div class="stage-dot" id="dot-3"></div><div class="stage-name">Rail Select</div><div class="stage-owner">cost/speed</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-3"></div></div><div class="stage-timing" id="tim-3">—</div></div>
+        <div class="sim-stage"><div class="stage-dot" id="dot-4"></div><div class="stage-name">Execute</div><div class="stage-owner">AP2 Payment Mandate</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-4"></div></div><div class="stage-timing" id="tim-4">—</div></div>
+      </div>
+      <div class="sim-controls">
+        <button class="run-btn" id="run-btn" onclick="runSim()">Run simulation</button>
+        <span class="sim-status" id="sim-status-label">idle</span>
+      </div>
+      <div class="sim-output" id="sim-output"><span class="out-comment"># select a scenario and run simulation</span></div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 9 ============ -->
+  <section class="section" id="s9">
+    <h2 class="section-heading"><span class="section-num">09</span> Success Metrics</h2>
+    <div class="stat-grid">
+      <div class="stat-cell"><div class="stat-value teal">–</div><div class="stat-label">Target: settlement time vs. correspondent-banking baseline</div></div>
+      <div class="stat-cell"><div class="stat-value amber">–</div><div class="stat-label">Target: effective cost (fees + FX) vs. baseline</div></div>
+      <div class="stat-cell"><div class="stat-value purple">100%</div><div class="stat-label">Target: negotiated terms re-verified before signature</div></div>
+      <div class="stat-cell"><div class="stat-value coral">0</div><div class="stat-label">Non-goal: unauthorised payments signed outside pre-set bounds</div></div>
+    </div>
+    <p class="body-text">Note what's absent: a target for what share of transactions run Tier 1 versus Tier 2. Maximising unattended execution isn't the goal — correctly routing the ones that need Halvorsen's eyes is.</p>
+  </section>
+
+  <!-- ============ SECTION 10 ============ -->
+  <section class="section" id="s10">
+    <h2 class="section-heading"><span class="section-num">10</span> Architecture Decision Records</h2>
+
+    <div class="adr-card">
+      <div class="adr-head"><span class="adr-id">ADR-CR-01</span><span class="adr-title">Five single-responsibility gated components across the A2A-to-AP2 pipeline</span></div>
+      <div class="adr-row"><strong>Context:</strong> Negotiation, integrity checking, compliance, rail choice, and execution are distinct concerns with different owners internally.</div>
+      <div class="adr-row"><strong>Decision:</strong> Each is a separate component with a defined contract, matching the discipline established elsewhere in this portfolio for regulated agentic systems.</div>
+      <div class="adr-row"><strong>Status:</strong> Accepted.</div>
+    </div>
+
+    <div class="adr-card">
+      <div class="adr-head"><span class="adr-id">ADR-CR-02</span><span class="adr-title">Rail Selection Engine is deterministic, not LLM-scored</span></div>
+      <div class="adr-row"><strong>Context:</strong> Choosing between stablecoin, SEPA Instant, and correspondent wire is a cost/speed optimisation over known, quantifiable parameters per corridor.</div>
+      <div class="adr-row"><strong>Decision:</strong> Implemented as deterministic logic against a maintained corridor-cost table, not an LLM judgement call.</div>
+      <div class="adr-row"><strong>Status:</strong> Accepted.</div>
+    </div>
+
+    <div class="adr-card">
+      <div class="adr-head"><span class="adr-id">ADR-CR-03</span><span class="adr-title">Tier 1 delegated execution permitted only strictly within the original Intent Mandate</span></div>
+      <div class="adr-row"><strong>Context:</strong> AP2 explicitly supports human-absent execution once a user has pre-authorised specific bounds via an Intent Mandate.</div>
+      <div class="adr-row"><strong>Decision:</strong> Any negotiated term outside those exact bounds forces Tier 2 human approval — the Intent Mandate's scope is read narrowly, not generously.</div>
+      <div class="adr-row"><strong>Consequence:</strong> A deliberate divergence from Lumen's always-human-signs stance elsewhere in this portfolio — legitimate here because the Intent Mandate is itself a genuine prior human authorisation, which has no equivalent in Lumen's underwriting domain.</div>
+      <div class="adr-row"><strong>Status:</strong> Accepted.</div>
+    </div>
+
+    <div class="adr-card">
+      <div class="adr-head"><span class="adr-id">ADR-CR-04</span><span class="adr-title">Mandate Integrity Gate never trusts the Negotiation Agent's self-report</span></div>
+      <div class="adr-row"><strong>Context:</strong> Published red-teaming research shows AP2 secures what is executed but not how the negotiation reached that outcome — the Negotiation Agent's context is exposed to the counterparty's input and is the most plausible injection surface.</div>
+      <div class="adr-row"><strong>Decision:</strong> The Gate independently re-derives whether the proposed Cart Mandate satisfies the Intent Mandate's constraints from the raw negotiated terms, not from the Negotiation Agent's summary of what it agreed.</div>
+      <div class="adr-row"><strong>Status:</strong> Accepted.</div>
+    </div>
+
+    <div class="adr-card">
+      <div class="adr-head"><span class="adr-id">ADR-CR-05</span><span class="adr-title">Compliance Screening Gate is a separate deterministic step, not an LLM consideration</span></div>
+      <div class="adr-row"><strong>Context:</strong> GENIUS Act BSA/AML and OFAC obligations, and UK/EU sanctions requirements, attach regardless of transaction size or the negotiation's outcome.</div>
+      <div class="adr-row"><strong>Decision:</strong> Screening runs as an isolated, independently testable step at signature time — never folded into the Negotiation Agent's reasoning, where Okafor could not audit it in isolation.</div>
+      <div class="adr-row"><strong>Status:</strong> Accepted.</div>
+    </div>
+
+    <div class="adr-card">
+      <div class="adr-head"><span class="adr-id">ADR-CR-06</span><span class="adr-title">One structured mandate-and-gate event log, feeding Treasury's existing dashboard</span></div>
+      <div class="adr-row"><strong>Context:</strong> AP2's own Mandates already provide cryptographic non-repudiation of what was authorised and executed.</div>
+      <div class="adr-row"><strong>Decision:</strong> Corridor's logging adds operational observability — gate decisions, rail choice, timing — on top of AP2's cryptographic layer, rather than re-deriving proof AP2 already provides. Output feeds Sandberg's existing liquidity dashboard directly.</div>
+      <div class="adr-row"><strong>Status:</strong> Accepted.</div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 11 ============ -->
+  <section class="section" id="s11">
+    <h2 class="section-heading"><span class="section-num">11</span> Objection Handling</h2>
+
+    <div class="callout coral">
+      <div class="callout-label">Shah — "one bad headline here damages trust across our whole book"</div>
+      <div class="callout-body">Correct, and the reason Phase 1 (§13) runs on a single narrow corridor with an allowlisted counterparty set, not a general release. The architecture reduces risk; it doesn't eliminate the reputational exposure of being early.</div>
+    </div>
+    <div class="callout amber">
+      <div class="callout-label">Tan — "what if the supplier's agent itself is compromised, not just the message channel?"</div>
+      <div class="callout-body">The Mandate Integrity Gate defends the Cart Mandate's content regardless of why it's wrong — compromised counterparty agent or injected message, the re-verification against Intent Mandate bounds catches both the same way. It does not, on its own, defend against a compromised counterparty agreeing to a technically in-bounds but commercially bad deal — that risk is unchanged from today's manual process.</div>
+    </div>
+    <div class="callout purple">
+      <div class="callout-label">Meehan — "are we a crypto-asset service provider under MiCA the moment we choose a stablecoin rail?"</div>
+      <div class="callout-body">Genuinely unresolved, and flagged as such rather than assumed away. Rail Selection Engine's logic can be built either way; the legal answer determines whether Phase 2 proceeds as designed or needs restructuring around a licensed third-party rail provider instead.</div>
+    </div>
+    <div class="callout blue">
+      <div class="callout-label">Halvorsen — "I don't want to learn what a Mandate is"</div>
+      <div class="callout-body">He shouldn't have to. Every protocol mechanic in §7 is invisible at the product surface — his interface shows a budget he sets once, a supplier he approves once, and a payment confirmation. The complexity is Farside's to manage, not his to see.</div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 12 ============ -->
+  <section class="section" id="s12">
+    <h2 class="section-heading"><span class="section-num">12</span> Cost Analysis</h2>
+    <table class="comp-table">
+      <tr><th>Line</th><th>Current state</th><th>With Corridor</th></tr>
+      <tr><td>Effective cost per transaction</td><td>5%+ of value on cross-border B2B for SMEs</td><td>Target: materially reduced via optimised rail selection, corridor-dependent</td></tr>
+      <tr><td>Settlement time</td><td>2–4 days via correspondent banking</td><td>Target: minutes to hours where a real-time or stablecoin rail is available end to end</td></tr>
+      <tr><td>Manual reconciliation</td><td>Negotiation and payment linked only by a person retyping figures</td><td>Structurally linked — Cart Mandate and Payment Mandate reference the same negotiated terms</td></tr>
+      <tr><td>Regulatory classification cost</td><td>Not yet determined</td><td>Meehan's MiCA determination is a prerequisite, not a follow-on cost</td></tr>
+    </table>
+    <p class="body-text">A single pilot corridor (§13) establishes real cost and time figures before any claim is made about the model at scale — the same discipline applied throughout this portfolio.</p>
+  </section>
+
+  <!-- ============ SECTION 13 ============ -->
+  <section class="section" id="s13">
+    <h2 class="section-heading"><span class="section-num">13</span> Rollout Roadmap</h2>
+    <table class="comp-table">
+      <tr><td>Phase 1</td><td>One corridor (UK–EU), one allowlisted counterparty set including BrunnerTeknik. Negotiation Agent and Mandate Integrity Gate live; Compliance Screening Gate live; settlement via SEPA Instant only — no stablecoin rail yet, to isolate the A2A/AP2 negotiation-and-mandate model from the MiCA/GENIUS questions.</td></tr>
+      <tr><td>Phase 2</td><td>Stablecoin rail added to Rail Selection Engine, contingent on Meehan's MiCA classification determination. GENIUS-side redemption SLA monitoring added to Payment Execution Agent.</td></tr>
+      <tr><td>Phase 3</td><td>Expand counterparty allowlist and corridor set; extend beyond quarterly-reorder patterns to first-time supplier negotiations, with a correspondingly narrower Tier 1 eligibility band.</td></tr>
+    </table>
+    <p class="body-text">Phase 1 deliberately excludes the stablecoin rail — proving the negotiation-to-mandate model on a fiat rail first means a failure in Phase 1 is a product bug, not a three-jurisdiction regulatory incident.</p>
+  </section>
+
+  <!-- ============ SECTION 14 ============ -->
+  <section class="section" id="s14">
+    <h2 class="section-heading"><span class="section-num">14</span> Stakeholder Deck</h2>
+
+    <div class="carousel">
+      <div class="carousel-nav">
+        <button class="slide-btn active" onclick="showSlide(0)">Shah</button>
+        <button class="slide-btn" onclick="showSlide(1)">Okafor</button>
+        <button class="slide-btn" onclick="showSlide(2)">Sandberg</button>
+        <button class="slide-btn" onclick="showSlide(3)">Tan</button>
+        <button class="slide-btn" onclick="showSlide(4)">Halvorsen</button>
+      </div>
+      <div class="slide-panel active">
+        <div class="slide-headline">One corridor, proven safe, before it's anywhere near your whole book</div>
+        <div class="slide-sub">For Priya Shah, Chief Product Officer</div>
+        <p class="body-text">Phase 1 is narrow by design — one corridor, one allowlist, no stablecoin rail yet. The cost and time case gets proven before the exposure grows.</p>
+        <div class="slide-note">A trust incident here costs more than a slow rollout — the roadmap reflects that trade-off deliberately.</div>
+      </div>
+      <div class="slide-panel">
+        <div class="slide-headline">A screening step you can test in isolation and defend on its own</div>
+        <div class="slide-sub">For Daniel Okafor, Head of Compliance &amp; MLRO</div>
+        <p class="body-text">The Compliance Screening Gate is never folded into an LLM's reasoning — it's a discrete, deterministic check you can audit independently of anything the Negotiation Agent said.</p>
+        <div class="slide-note">Same AML/sanctions standard as a human-initiated payment, no exceptions for speed.</div>
+      </div>
+      <div class="slide-panel">
+        <div class="slide-headline">Nothing happens outside your dashboard</div>
+        <div class="slide-sub">For Elin Sandberg, Head of Treasury &amp; Payments Ops</div>
+        <p class="body-text">Every rail decision and executed payment writes into your existing liquidity view in real time — agentic settlement was never going to get a system of its own to hide in.</p>
+        <div class="slide-note">Visibility first; automation only where it doesn't cost you that visibility.</div>
+      </div>
+      <div class="slide-panel">
+        <div class="slide-headline">The gate assumes the negotiation was attacked</div>
+        <div class="slide-sub">For Mei Lin Tan, Security &amp; Trust Engineering Lead</div>
+        <p class="body-text">The Mandate Integrity Gate never trusts what the Negotiation Agent says it agreed to — it re-derives compliance from the raw terms, every time, because that agent's context is the one exposed to the counterparty.</p>
+        <div class="slide-note">Built on the assumption the published research is right, not the assumption it won't happen to us.</div>
+      </div>
+      <div class="slide-panel">
+        <div class="slide-headline">You set a budget once. That's the whole interface.</div>
+        <div class="slide-sub">For Tom Halvorsen, Halvorsen &amp; Cole Fabrication</div>
+        <p class="body-text">No mandates, no rails, no protocol names in your product surface — just a budget, an approved supplier, and a payment confirmation each quarter.</p>
+        <div class="slide-note">Everything in this document is Farside's complexity to manage, not yours to see.</div>
+      </div>
+    </div>
+  </section>
+
+  </div>
+
+  <footer class="doc-footer">Corridor — a fictional design exercise for Farside Payments, built as a portfolio artefact. Not legal, regulatory, or financial advice.</footer>
+</div>
+</div>
+
+<script>
+const scenarios = [
+  { desc: 'Routine quarterly reorder, approved supplier, negotiated terms within pre-authorised budget.',
+    timings: [700, 260, 240, 200, 380],
+    output: [
+      ['comment','# corridor \u00b7 order run \u00b7 order: FP-88213'],
+      ['comment','# stage: negotiate \u2192 A2A session with BrunnerTeknik agent, trace: c92a'],
+      ['key','agreed_price: ','val','"\u20ac340,000 \u2014 within Q3 procurement budget"'],
+      ['comment','# stage: mandate_integrity_gate \u2192 independent re-check vs. Intent Mandate'],
+      ['key','result: ','val','"PASS \u2014 price, counterparty, currency all within bounds"'],
+      ['comment','# stage: compliance_gate \u2192 sanctions/AML screen, BrunnerTeknik GmbH'],
+      ['key','result: ','val','"PASS \u2014 no matches, known counterparty"'],
+      ['comment','# stage: rail_selection \u2192 corridor: UK\u2192DE, \u20ac340,000'],
+      ['key','selected_rail: ','val','"SEPA Instant \u2014 lowest cost, same-day, no stablecoin dependency"'],
+      ['comment','# stage: execute \u2192 Payment Mandate signed and submitted'],
+      ['warn','#   tier: 1 \u2014 no human approval required, within pre-authorised bounds'],
+    ]},
+  { desc: 'Same reorder, but negotiation drifts 14% above the pre-authorised price ceiling.',
+    timings: [720, 280, 0, 0, 0],
+    output: [
+      ['comment','# corridor \u00b7 order run \u00b7 order: FP-88214'],
+      ['comment','# stage: negotiate \u2192 A2A session with BrunnerTeknik agent, trace: d10f'],
+      ['key','agreed_price: ','val','"\u20ac387,600 \u2014 14% above Intent Mandate ceiling"'],
+      ['comment','# stage: mandate_integrity_gate \u2192 independent re-check vs. Intent Mandate'],
+      ['warn','#   result: FAIL \u2014 negotiated price exceeds pre-authorised ceiling'],
+      ['warn','#   state: HALTED \u2014 no Payment Mandate generated'],
+      ['warn','#   tier: 2 \u2014 routed to Halvorsen for manual Cart Mandate approval'],
+    ]},
+];
+let activeScenario = 0, running = false;
+function selectScenario(i){ if(running) return; activeScenario=i; document.querySelectorAll('.scenario-btn').forEach((b,j)=>b.classList.toggle('active',i===j)); document.getElementById('sim-desc').textContent=scenarios[i].desc; resetSim(); }
+function resetSim(){ for(let i=0;i<5;i++){ document.getElementById('dot-'+i).className='stage-dot'; document.getElementById('bar-'+i).style.width='0'; document.getElementById('tim-'+i).textContent='—'; document.getElementById('tim-'+i).className='stage-timing'; } document.getElementById('sim-output').innerHTML='<span class="out-comment"># select a scenario and run simulation</span>'; document.getElementById('sim-status-label').textContent='idle'; document.getElementById('sim-status-label').className='sim-status'; }
+function fmtTime(ms){ return ms<1000 ? ms+'ms' : (ms/1000).toFixed(1)+'s'; }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+async function runSim(){
+  if(running) return; running=true; document.getElementById('run-btn').disabled=true;
+  const s = scenarios[activeScenario];
+  const statusEl = document.getElementById('sim-status-label');
+  statusEl.textContent='running'; statusEl.className='sim-status running';
+  document.getElementById('sim-output').innerHTML='';
+  for(let i=0;i<5;i++){
+    const blocked = (s.timings[i]||0)===0 && i>=2;
+    document.getElementById('dot-'+i).className='stage-dot running';
+    await sleep(blocked ? 200 : s.timings[i]);
+    document.getElementById('bar-'+i).style.width= blocked ? '35%' : '100%'; await sleep(150);
+    document.getElementById('dot-'+i).className = blocked ? 'stage-dot blocked' : 'stage-dot done';
+    const timEl=document.getElementById('tim-'+i); timEl.textContent= blocked ? 'halted' : fmtTime(s.timings[i]); timEl.className='stage-timing done';
+  }
+  const out=document.getElementById('sim-output'); out.innerHTML='';
+  for(const line of s.output){
+    await sleep(55);
+    const span=document.createElement('span'); span.className='out-line';
+    if(line[0]==='comment'){ span.innerHTML='<span class="out-comment">'+line[1]+'</span>'; }
+    else if(line[0]==='warn'){ span.innerHTML='<span class="out-warn">'+line[1]+'</span>'; }
+    else { let html=''; for(let k=0;k<line.length;k+=2){ if(k+1<line.length) html+='<span class="out-'+line[k]+'">'+line[k+1]+'</span>'; } span.innerHTML=html; }
+    out.appendChild(span); out.scrollTop=out.scrollHeight;
+  }
+  statusEl.textContent='complete'; statusEl.className='sim-status done'; running=false; document.getElementById('run-btn').disabled=false;
+}
+selectScenario(0);
+
+function showSlide(i){ document.querySelectorAll('.slide-btn').forEach((b,j)=>b.classList.toggle('active',i===j)); document.querySelectorAll('.slide-panel').forEach((p,j)=>p.classList.toggle('active',i===j)); }
+
+const sections = document.querySelectorAll('section[id]');
+const links = document.querySelectorAll('.sidebar-nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  links.forEach(a => { const href = a.getAttribute('href').replace('#',''); a.classList.toggle('active', href === current); });
+}, { passive: true });
+</script>
+</body>
+</html>

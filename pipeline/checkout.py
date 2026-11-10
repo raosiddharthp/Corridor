@@ -71,6 +71,11 @@ def build_checkout(
     )
 
 
+def compute_hash(checkout_jwt: str) -> str:
+    """The checkout hash a payment mandate carries as its transaction_id."""
+    return compute_sha256_b64url(checkout_jwt)
+
+
 def sign_checkout(checkout: Checkout, supplier_key: JWK) -> SignedCheckout:
     payload = json.dumps(
         checkout.model_dump(mode="json", exclude_none=True),
@@ -80,7 +85,7 @@ def sign_checkout(checkout: Checkout, supplier_key: JWK) -> SignedCheckout:
     jws = JWS(payload)
     jws.add_signature(supplier_key, alg=ALG, protected=json.dumps({"alg": ALG, "typ": "JWT"}))
     token = jws.serialize(compact=True)
-    return SignedCheckout(jwt=token, hash=compute_sha256_b64url(token))
+    return SignedCheckout(jwt=token, hash=compute_hash(token))
 
 
 def grand_total_minor(checkout: Checkout) -> int:

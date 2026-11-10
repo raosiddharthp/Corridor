@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Protocol
 
+from pipeline import checkout as co
 from pipeline import mandates
 
 log = logging.getLogger("corridor.gate")
@@ -75,6 +76,21 @@ def recompute(chain, usage) -> list[str]:
     return out
 
 
+def order_violations(chain, checkout) -> list[str]:
+    """The payment must match the supplier-signed order it is bound to."""
+    closed = chain.closed_mandate
+    paid = closed.payment_amount
+    out: list[str] = []
+    total = co.grand_total_minor(checkout)
+    if paid.amount != total:
+        out.append(f"payment amount {paid.amount} differs from checkout total {total}")
+    if paid.currency != checkout.currency:
+        out.append("payment currency differs from checkout currency")
+    if checkout.merchant is None or checkout.merchant.id != closed.payee.id:
+        out.append("payee differs from the checkout merchant")
+    return out
+
+
 def check(
     token,
     *,
@@ -84,6 +100,7 @@ def check(
     expected_transaction_id: str,
     challenges: Challenges,
     usage=None,
+    checkout=None,
 ) -> GateResult:
     try:
         if not challenges.consume(aud, nonce):
@@ -102,6 +119,7 @@ def check(
 
         chain = mandates.verified_chain(token, user_public=user_public, aud=aud, nonce=nonce)
         own = recompute(chain, usage)
+        order = order_violations(chain, checkout) if checkout is not None else []
     except Exception:
         log.exception("mandate gate error")
         return _fail("internal error, failing closed")
@@ -109,4 +127,38 @@ def check(
     if own:
         log.error("verifier disagreement: %s", own)
         return _fail("independent check disagrees with the SDK verdict", *own)
+    if order:
+        return _fail("payment does not match the signed checkout", *order)
     return GateResult(GATE, True, ())
+
+
+def check_order(
+    checkout_jwt: str,
+    token,
+    *,
+    supplier_public,
+    user_public,
+    aud: str,
+    nonce: str,
+    challenges: Challenges,
+    usage=None,
+) -> GateResult:
+    """Verify the supplier's signed order, then the payment bound to it."""
+    try:
+        checkout = co.verify_checkout(checkout_jwt, supplier_public)
+    except co.CheckoutError as exc:
+        return _fail(f"checkout rejected: {exc}")
+    except Exception:
+        log.exception("checkout verification error")
+        return _fail("internal error, failing closed")
+
+    return check(
+        token,
+        user_public=user_public,
+        aud=aud,
+        nonce=nonce,
+        expected_transaction_id=co.compute_hash(checkout_jwt),
+        challenges=challenges,
+        usage=usage,
+        checkout=checkout,
+    )

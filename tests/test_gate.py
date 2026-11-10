@@ -232,3 +232,85 @@ def test_ledger_drives_the_gate_across_four_uses(keys, challenges):
         ledger.record("mandate-1", f"pay-{i}", PAYMENT)
     fifth = _run(keys, challenges, usage=ledger.usage("mandate-1"), **kw)
     assert not fifth.passed
+
+
+from pipeline import checkout as co  # noqa: E402
+
+SENSORS = [("sensor-array", "Sensor array", 17_000_000, 2)]  # EUR 340,000
+
+
+def _order(
+    keys,
+    challenges,
+    *,
+    lines=SENSORS,
+    merchant=SUPPLIER,
+    cents=None,
+    transaction_id=None,
+    supplier_key=None,
+    verify_with=None,
+):
+    user, agent = keys
+    supplier_key = supplier_key or m.new_key()
+    checkout = co.build_checkout(
+        checkout_id="co-1", merchant=merchant, currency="EUR", lines=lines
+    )
+    signed = co.sign_checkout(checkout, supplier_key)
+    total = co.grand_total_minor(checkout)
+    c = challenges.issue(AUD)
+    open_token = m.sign_open(
+        m.open_payment_mandate(payee=SUPPLIER, max_minor=CAP, agent_key=agent), user
+    )
+    closed = m.closed_payment_mandate(
+        transaction_id=transaction_id or signed.hash,
+        payee=SUPPLIER,
+        amount_minor=total if cents is None else cents,
+        instrument=ACCOUNT,
+    )
+    token = m.delegate(open_token, closed, agent, aud=AUD, nonce=c.nonce)
+    return gate.check_order(
+        signed.jwt,
+        token,
+        supplier_public=m.public_only(verify_with or supplier_key),
+        user_public=m.public_only(user),
+        aud=AUD,
+        nonce=c.nonce,
+        challenges=challenges,
+    )
+
+
+def test_order_passes_when_everything_matches(keys, challenges):
+    result = _order(keys, challenges)
+    assert result.passed, result.reasons
+
+
+def test_forged_checkout_is_rejected(keys, challenges):
+    result = _order(keys, challenges, verify_with=m.new_key())
+    assert not result.passed
+    assert result.reasons[0].startswith("checkout rejected")
+
+
+def test_payment_amount_must_equal_checkout_total(keys, challenges):
+    result = _order(keys, challenges, cents=33_000_000)
+    assert not result.passed
+    assert any("differs from checkout total" in r for r in result.reasons)
+
+
+def test_payee_must_match_checkout_merchant(keys, challenges):
+    result = _order(keys, challenges, merchant=OTHER)
+    assert not result.passed
+    assert any("checkout merchant" in r for r in result.reasons)
+
+
+def test_payment_bound_to_another_checkout_is_rejected(keys, challenges):
+    result = _order(keys, challenges, transaction_id="hash-of-some-other-order")
+    assert not result.passed
+    assert any("transaction_id mismatch" in r for r in result.reasons)
+
+
+def test_checkout_cannot_launder_an_over_cap_payment(keys, challenges):
+    result = _order(
+        keys, challenges, lines=[("sensor-array", "Sensor array", 99_000_000, 1)]
+    )
+    assert not result.passed
+    assert any("exceeds maximum" in r for r in result.reasons)

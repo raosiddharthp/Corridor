@@ -1,57 +1,81 @@
 import pytest
 
-import pipeline.keys as keys_mod
+import pipeline.keys as k
 from pipeline.mandates import new_key
 
 
-def _env(**roles):
-    return {keys_mod.ENV_PREFIX + r.upper(): v for r, v in roles.items()}
+def _env(**overrides):
+    env = {
+        k.USER_ENV: k.export_private(new_key()),
+        k.AGENT_ENV: k.export_private(new_key()),
+        k.SUPPLIER_PUBLIC_ENV: k.export_public(new_key()),
+    }
+    env.update(overrides)
+    return env
 
 
-def _full():
-    return _env(**{r: keys_mod.export_private(new_key()) for r in keys_mod.ROLES})
-
-
-def test_loads_three_distinct_keys():
-    ks = keys_mod.load_keys(_full())
-    assert not ks.ephemeral
-    thumbs = {ks.user.thumbprint(), ks.agent.thumbprint(), ks.supplier.thumbprint()}
-    assert len(thumbs) == 3
+def test_loads_user_agent_and_supplier_public_keys():
+    supplier = new_key()
+    env = _env(**{k.SUPPLIER_PUBLIC_ENV: k.export_public(supplier)})
+    ks = k.load_keys(env)
+    assert ks.supplier_public.thumbprint() == supplier.thumbprint()
+    assert len({ks.user.thumbprint(), ks.agent.thumbprint(), ks.supplier_public.thumbprint()}) == 3
 
 
 def test_nothing_configured_fails_closed():
-    with pytest.raises(keys_mod.KeyConfigError, match="not allowed"):
-        keys_mod.load_keys({})
+    with pytest.raises(k.KeyConfigError, match="not set"):
+        k.load_keys({})
 
 
-def test_ephemeral_keys_only_when_flagged():
-    ks = keys_mod.load_keys({keys_mod.EPHEMERAL_FLAG: "true"})
-    assert ks.ephemeral
-    assert len({ks.user.thumbprint(), ks.agent.thumbprint(), ks.supplier.thumbprint()}) == 3
+@pytest.mark.parametrize("name", [k.USER_ENV, k.AGENT_ENV, k.SUPPLIER_PUBLIC_ENV])
+def test_each_missing_variable_fails_closed(name):
+    env = _env()
+    del env[name]
+    with pytest.raises(k.KeyConfigError, match=name):
+        k.load_keys(env)
 
 
-def test_partial_configuration_fails_closed():
-    env = _env(user=keys_mod.export_private(new_key()))
-    with pytest.raises(keys_mod.KeyConfigError, match="missing"):
-        keys_mod.load_keys(env)
+def test_same_key_for_user_and_agent_is_rejected():
+    shared = k.export_private(new_key())
+    with pytest.raises(k.KeyConfigError, match="distinct"):
+        k.load_keys(_env(**{k.USER_ENV: shared, k.AGENT_ENV: shared}))
 
 
-def test_same_key_for_two_roles_is_rejected():
-    shared = keys_mod.export_private(new_key())
-    env = _env(user=shared, agent=shared, supplier=keys_mod.export_private(new_key()))
-    with pytest.raises(keys_mod.KeyConfigError, match="distinct"):
-        keys_mod.load_keys(env)
+def test_supplier_public_key_equal_to_the_agents_key_is_rejected():
+    agent = new_key()
+    env = _env(**{k.AGENT_ENV: k.export_private(agent), k.SUPPLIER_PUBLIC_ENV: k.export_public(agent)})
+    with pytest.raises(k.KeyConfigError, match="distinct"):
+        k.load_keys(env)
 
 
-def test_public_key_is_rejected_as_private():
-    env = _full()
-    env[keys_mod.ENV_PREFIX + "AGENT"] = new_key().export_public()
-    with pytest.raises(keys_mod.KeyConfigError, match="agent"):
-        keys_mod.load_keys(env)
+def test_public_key_is_rejected_where_a_private_key_is_required():
+    env = _env(**{k.AGENT_ENV: k.export_public(new_key())})
+    with pytest.raises(k.KeyConfigError, match=k.AGENT_ENV):
+        k.load_keys(env)
+
+
+def test_private_key_is_rejected_as_the_supplier_public_key():
+    env = _env(**{k.SUPPLIER_PUBLIC_ENV: k.export_private(new_key())})
+    with pytest.raises(k.KeyConfigError, match="public key only"):
+        k.load_keys(env)
 
 
 def test_garbage_is_rejected():
-    env = _full()
-    env[keys_mod.ENV_PREFIX + "SUPPLIER"] = "not json"
-    with pytest.raises(keys_mod.KeyConfigError, match="supplier"):
-        keys_mod.load_keys(env)
+    with pytest.raises(k.KeyConfigError, match=k.USER_ENV):
+        k.load_keys(_env(**{k.USER_ENV: "not json"}))
+
+
+def test_supplier_signing_key_loads():
+    supplier = new_key()
+    loaded = k.load_supplier_signing_key({k.SUPPLIER_PRIVATE_ENV: k.export_private(supplier)})
+    assert loaded.thumbprint() == supplier.thumbprint()
+
+
+def test_supplier_signing_key_missing_fails_closed():
+    with pytest.raises(k.KeyConfigError, match="not set"):
+        k.load_supplier_signing_key({})
+
+
+def test_supplier_signing_key_rejects_a_public_key():
+    with pytest.raises(k.KeyConfigError, match=k.SUPPLIER_PRIVATE_ENV):
+        k.load_supplier_signing_key({k.SUPPLIER_PRIVATE_ENV: k.export_public(new_key())})

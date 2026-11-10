@@ -91,3 +91,11 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 ### Test counts as a signal
 - **What happened:** predicted pass counts were wrong twice (parametrised cases each count as a test, and one count was simply miscounted). Once, the count did not move at all after a step because the new files had not been written.
 - **Lesson:** compare against the previous count, not a prediction. A count that stays put after adding tests is the cheapest sign that nothing was applied.
+
+## Keys and services
+
+### One process held every private key
+- **What happened:** the first key loader required the user, agent and supplier private keys in one environment, so the main service would have held the supplier's signing key.
+- **Cause:** the keys were modelled as a list of three roles instead of as trust domains.
+- **Fix:** the main service holds the user and agent private keys and only the supplier's public key. The supplier service holds only its own private key. A private key in the public slot is rejected, and the ephemeral-key mode was removed because it could not work across two services.
+- **Lesson:** key roles map to services, not to a list.

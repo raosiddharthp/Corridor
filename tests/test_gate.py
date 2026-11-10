@@ -219,3 +219,16 @@ def test_budget_conversion_to_cents_is_exact():
     # int(19.99 * 100) would give 1998
     assert gate._budget_minor(19.99) == 1999
     assert gate._budget_minor(1_400_000.0) == 140_000_000
+
+
+def test_ledger_drives_the_gate_across_four_uses(keys, challenges):
+    from pipeline.ledger import MemorySpendLedger
+
+    ledger = MemorySpendLedger()
+    kw = dict(max_occurrences=4, budget_minor=BUDGET)
+    for i in range(4):
+        result = _run(keys, challenges, usage=ledger.usage("mandate-1"), **kw)
+        assert result.passed, (i, result.reasons)
+        ledger.record("mandate-1", f"pay-{i}", PAYMENT)
+    fifth = _run(keys, challenges, usage=ledger.usage("mandate-1"), **kw)
+    assert not fifth.passed

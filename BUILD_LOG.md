@@ -85,3 +85,9 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 - **Finding:** the checkout chain only decodes the payload of the supplier's signed order. Nothing in it verifies the signature, and the SDK never computes the checkout hash, it only compares one.
 - **Decision:** the gate verifies the supplier's signature against a key it already trusts, and recomputes the hash itself (base64url of SHA-256 over the signed JWT string).
 - **Lesson:** "verify" in a library can mean "parse and check constraints". Read what it actually checks.
+
+## Working habits (continued)
+
+### Test counts as a signal
+- **What happened:** predicted pass counts were wrong twice (parametrised cases each count as a test, and one count was simply miscounted). Once, the count did not move at all after a step because the new files had not been written.
+- **Lesson:** compare against the previous count, not a prediction. A count that stays put after adding tests is the cheapest sign that nothing was applied.

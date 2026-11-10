@@ -1,0 +1,10 @@
+.venv
+.git
+tests
+supplier
+__pycache__
+.pytest_cache
+.env
+*.pem
+*.key
+guard

@@ -99,3 +99,15 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 - **Cause:** the keys were modelled as a list of three roles instead of as trust domains.
 - **Fix:** the main service holds the user and agent private keys and only the supplier's public key. The supplier service holds only its own private key. A private key in the public slot is rejected, and the ephemeral-key mode was removed because it could not work across two services.
 - **Lesson:** key roles map to services, not to a list.
+
+## A2A
+
+### A2A 1.x wants a Task before any status event
+- **Symptom:** every client call failed with "Agent should enqueue Task before TaskStatusUpdateEvent event", while the Agent Card route worked.
+- **Cause:** the executor was written from the older pattern where the first status update creates the task. In a2a-sdk 1.x the executor must enqueue a Task first.
+- **Fix:** enqueue a submitted Task before the first status update.
+- **Lesson:** when an SDK's major version is newer than what you know, run the server and the client end to end before building on top of it.
+
+### Committed red, again
+- **What happened:** the supplier tests were committed with five failures because the "only if green" rule depended on someone reading the output.
+- **Fix:** a small script (`scripts/commit_if_green.sh`) now runs the suite and refuses to commit on failure.

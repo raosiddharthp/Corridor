@@ -1,7 +1,7 @@
 """Supplier agent: an A2A server for BrunnerTeknik (a scripted counterparty)."""
 import inspect
 
-from a2a.helpers.proto_helpers import new_data_part, new_text_part
+from a2a.helpers.proto_helpers import new_data_part, new_task, new_text_part
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.server.request_handlers import DefaultRequestHandler
@@ -11,7 +11,7 @@ from a2a.server.routes import (
     create_jsonrpc_routes,
 )
 from a2a.server.tasks import InMemoryTaskStore, TaskUpdater
-from a2a.types import AgentCapabilities, AgentCard, AgentInterface, AgentSkill
+from a2a.types import AgentCapabilities, AgentCard, AgentInterface, AgentSkill, TaskState
 from fastapi import FastAPI
 from jwcrypto.jwk import JWK
 
@@ -41,7 +41,10 @@ class SupplierExecutor(AgentExecutor):
 
     async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
         updater = TaskUpdater(event_queue, context.task_id, context.context_id)
-        await _maybe(updater.submit())
+        has_task = getattr(context, "current_task", None) or getattr(context, "task", None)
+        if not has_task:
+            task = new_task(context.task_id, context.context_id, TaskState.TASK_STATE_SUBMITTED)
+            await _maybe(event_queue.enqueue_event(task))
         await _maybe(updater.start_work())
         try:
             ref, hostile = parse_request(context.get_user_input())

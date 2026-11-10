@@ -69,3 +69,14 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 - **Caught by:** a negative test.
 - **Fix:** an explicit check for the private component.
 - **Lesson:** assert the property yourself instead of inferring it from how a library behaves.
+
+## Mandate Integrity Gate
+
+### Why the gate re-checks what the SDK already checks
+- **Finding:** the SDK's verify step only checks signatures and the chain. Constraints are evaluated separately, the spend history has to be supplied by the caller, `Budget.max` is in euros while everything else is in cents, and the budget conversion truncates, so a float like 19.99 can lose a cent.
+- **Decision:** the gate re-derives payee, cap, budget and recurrence itself in exact integers. If the SDK says ok and the gate disagrees, the payment is rejected and the disagreement is logged.
+- **Lesson:** a protocol's reference verifier is not a substitute for your own checks.
+
+### Testing the independent check needed the SDK silenced
+- **What happened:** the SDK catches the same violations first, so the gate's own check could never fail in a normal test.
+- **Fix:** tests replace the SDK verdict with "ok" to prove the gate's own check catches the violation on its own.

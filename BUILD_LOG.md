@@ -80,3 +80,8 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 ### Testing the independent check needed the SDK silenced
 - **What happened:** the SDK catches the same violations first, so the gate's own check could never fail in a normal test.
 - **Fix:** tests replace the SDK verdict with "ok" to prove the gate's own check catches the violation on its own.
+
+### The SDK reads the supplier's checkout without verifying who signed it
+- **Finding:** the checkout chain only decodes the payload of the supplier's signed order. Nothing in it verifies the signature, and the SDK never computes the checkout hash, it only compares one.
+- **Decision:** the gate verifies the supplier's signature against a key it already trusts, and recomputes the hash itself (base64url of SHA-256 over the signed JWT string).
+- **Lesson:** "verify" in a library can mean "parse and check constraints". Read what it actually checks.

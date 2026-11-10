@@ -141,9 +141,9 @@ def test_budget_boundary_is_exact(keys):
     from ap2.sdk.constraints import MandateContext
 
     token = _delegated(keys, _signed(keys, max_occurrences=4, budget_minor=BUDGET))
-    at_limit = _check(keys, token, usage=MandateContext(total_uses=3, total_amount=BUDGET - CAP))
+    at_limit = _check(keys, token, usage=MandateContext(total_uses=3, total_amount=BUDGET - 34_000_000))
     assert at_limit.ok, at_limit.violations
 
-    one_cent_over = _check(keys, token, usage=MandateContext(total_uses=3, total_amount=BUDGET - CAP + 1))
+    one_cent_over = _check(keys, token, usage=MandateContext(total_uses=3, total_amount=BUDGET - 34_000_000 + 1))
     assert not one_cent_over.ok
     assert any("exceeds" in v for v in one_cent_over.violations), one_cent_over.violations

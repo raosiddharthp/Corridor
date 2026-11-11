@@ -142,3 +142,7 @@ Creating two service accounts and binding secret access in one script failed for
 ## Deployment: commas in gcloud environment values
 
 The cost guard's list of services is a comma-separated environment value. gcloud also uses commas to separate KEY=value pairs, so the update was rejected as a malformed second pair. A `| tail -3` on the command hid the error and the follow-up check showed the old value unchanged. Two fixes: give gcloud another pair separator (`^@^KEY=a,b`), and never trim a command's output when the next step depends on it succeeding. The guard function is also redeployed as a function, not patched as the Cloud Run service beneath it, so its source and live setting agree.
+
+## Deployment: proving the kill switch
+
+A synthetic budget message at the cap (name corridor-cap, cost equal to limit) locks both services. It works, but my first reading of the test was wrong twice. The guard prints structured JSON, which the log reader shows as blank text, so a grep on message text found nothing. And Cloud Run takes a minute or more to apply an IAM removal, so a check right after the event still saw HTTP 200. Reading the structured log (jsonPayload.event) and polling until the status changes gave the real answer. Lesson: test a safety control by its recorded events and wait for propagation before concluding that it failed. Real billing notifications arrive about every 20 minutes and are ignored below the cap, which the log also shows.

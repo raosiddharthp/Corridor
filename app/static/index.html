@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Corridor live proof of concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/console.css"/>
+</head>
+<body>
+<header class="top">
+  <div class="eyebrow">Live proof of concept</div>
+  <h1>Corridor <em>settlement</em></h1>
+  <p class="tagline">A2A negotiates, AP2 settles. Five gated components decide whether a cross-border payment moves on its own or waits for a person.</p>
+  <p class="disclaimer">Fictional companies and simulated payments. No money moves.</p>
+</header>
+
+<div id="banner" class="banner" role="status" hidden></div>
+
+<main class="layout">
+  <div class="col">
+    <section class="panel">
+      <h2>Orders</h2>
+      <div id="orders" class="orders"></div>
+      <label class="check">
+        <input type="checkbox" id="hostile"/>
+        <span>Hostile supplier note. Simulates a supplier whose note tries to instruct the agent. It can only add a human review, never loosen a check.</span>
+      </label>
+    </section>
+    <section class="panel">
+      <h2>Standing mandate</h2>
+      <dl id="mandate" class="facts"></dl>
+    </section>
+    <section class="panel">
+      <h2>Demo</h2>
+      <p class="muted">The mandate allows a limited number of payments per period, so repeated runs eventually stop at the gate. Reset clears spend history and pending approvals.</p>
+      <button id="reset" class="btn" data-action>Reset demo state</button>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="panel">
+      <h2 id="run-title">Run</h2>
+      <p id="run-empty" class="muted">Pick an order and press Run. Each step appears here as it happens.</p>
+      <ol id="timeline" class="timeline" aria-live="polite"></ol>
+      <div id="result" class="result" hidden></div>
+      <div id="approval" class="approval" hidden>
+        <h3>Human approval needed</h3>
+        <p id="approval-detail"></p>
+        <div class="actions">
+          <button id="approve" class="btn primary" data-action>Approve and pay</button>
+          <button id="reject" class="btn" data-action>Reject</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <span>Payments are simulated and the parties are fictional.</span>
+  <a href="https://raosiddharthp.github.io/Corridor/">Read the design document</a>
+</footer>
+<script src="/console.js" defer></script>
+</body>
+</html>

@@ -42,10 +42,12 @@ An approval can be used once. If you select **Approve and pay** again for the sa
 ## Try a hostile supplier
 
 1. Select **Reset demo state**.
-2. Turn on the hostile-supplier option under **Demo**.
+2. Turn on **Hostile supplier note** under **Demo**.
 3. Select FP-88213, then select **Run**.
 
-The supplier's message now contains an instruction aimed at the buyer's agent. The system treats the message as untrusted text. It can make the system more cautious, but it can't make the system pay more or skip a check. The amount paid is always the one in the supplier's signed checkout.
+The supplier's message now contains an instruction aimed at the buyer's agent. The system treats the message as untrusted text. Instead of paying, it stops at **Human approval needed** and gives the reason: the note was flagged for review. A message like this can add a review, but it can never remove a check or raise the amount. The amount is always the one in the supplier's signed checkout.
+
+Select **Reject** to stop, or **Approve and pay** to pay the agreed amount.
 
 ## Reach the budget limit
 

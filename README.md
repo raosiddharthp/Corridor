@@ -4,7 +4,7 @@
 
 ![Protocol: A2A](https://img.shields.io/badge/protocol-A2A-0a6b52?style=flat-square)
 ![Protocol: AP2](https://img.shields.io/badge/protocol-AP2-1850a0?style=flat-square)
-![Status: architecture phase](https://img.shields.io/badge/status-architecture%20%2B%20simulation-b07010?style=flat-square)
+![Status: live proof of concept](https://img.shields.io/badge/status-live%20proof%20of%20concept-b07010?style=flat-square)
 ![Jurisdictions: UK · EU · US](https://img.shields.io/badge/jurisdictions-UK%20%C2%B7%20EU%20%C2%B7%20US-4a40b0?style=flat-square)
 ![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
 
@@ -24,19 +24,44 @@ This isn't "an AI agent that pays things." [A2A](https://a2a-protocol.org) is Go
 
 A recent independent red-teaming study of AP2 found the protocol cryptographically secures **what** gets executed, but doesn't constrain **how** the mandate was constructed during negotiation — meaning a compromised or prompt-injected negotiation could still produce a validly signed, badly wrong Cart Mandate. Corridor's Mandate Integrity Gate exists specifically to close that gap. That finding — not a hypothetical — is the reason this system looks the way it does.
 
-## Live artifact
+## Live proof of concept
 
-`corridor-design-doc.html` is a self-contained, interactive living design document — no build step, no dependencies. Open it directly in a browser, or serve it via GitHub Pages. It includes:
+Corridor runs as two small services on Google Cloud Run, with simulated payments.
 
-- A full client brief, stakeholder map, and problem statement for the fictional anchor client, **Farside Payments**
-- An interactive **agent-trace simulator** — run a routine in-policy settlement end to end, then run a second case where a negotiated price drifts outside the pre-authorized ceiling and watch the Mandate Integrity Gate halt it before signature
-- The full regulatory obligation mapping, ADR set, and rollout roadmap referenced below
+- Open the [design document](https://raosiddharthp.github.io/Corridor/) and select **Launch live POC** to try the console.
+- Run FP-88213 to see an in-policy €340,000 payment settle automatically (Tier 1).
+- Run FP-88214 to see a price drift of 352 basis points stop for human approval (Tier 2), then approve it.
+- Turn on the hostile supplier note to see untrusted text fail to loosen any check.
+
+The five gated components are the Negotiation Agent, the Mandate Integrity Gate, the Compliance Screening Gate, the Rail Selection Engine and the Payment Execution Agent. Payments are simulated and no real money moves.
+
+## Design document
+
+`index.html` is a self-contained, interactive design document with no build step. It includes:
+
+- A client brief, stakeholder map and problem statement for the fictional anchor client, **Farside Payments**
+- An interactive **agent-trace simulator**: run a routine in-policy settlement, then a second case where a negotiated price drifts outside the pre-authorized ceiling and watch the Mandate Integrity Gate halt it before signature
+- The regulatory obligation mapping, the decision records and the rollout roadmap
+
+## Documentation
+
+| Guide | For |
+|---|---|
+| [USER_GUIDE.md](USER_GUIDE.md) | Using the console |
+| [DEVELOPERS.md](DEVELOPERS.md) | Architecture, running locally, deploying, operating |
+| [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | Presenting the proof of concept in five minutes |
+| [BUILD_LOG.md](BUILD_LOG.md) | The mistakes and variations made while building it |
+
+## Run it locally
 
 ```
-open corridor-design-doc.html
-# or, for a shareable link:
-# push to a gh-pages branch and serve via GitHub Pages
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+python -m scripts.make_keys
+python -m pytest -q
 ```
+
+See DEVELOPERS.md for starting the two services.
 
 ## Architecture
 

@@ -27,9 +27,12 @@ Message: approval does not loosen the gate. It produces a new, capped mandate th
 
 ## Scene 3: a hostile supplier
 
-1. Select **Reset demo state**, then FP-88213, turn on the hostile-supplier option under **Demo**, and select **Run**.
-2. The supplier's note now contains an instruction aimed at the agent. The note is treated as untrusted data: it is sanitised, framed, and any proposal from the interpreter can only tighten the decision, never loosen it.
-3. Show that the outcome is still decided by the signed checkout total, not by the note.
+1. Select **Reset demo state**, then FP-88213. Turn on **Hostile supplier note** under **Demo**, and select **Run**.
+2. The supplier's note now contains an instruction aimed at the agent. The note is treated as untrusted data: it is sanitised and framed before the interpreter reads it.
+3. The run stops at **Human approval needed**. The reason reads: supplier note flagged for review, note contains instructions addressed to the reader. No payment has been built, and the total is still the agreed €340,000 from the signed checkout.
+4. Select **Reject**.
+
+Message: untrusted text can add a human review. It can never remove a check. The same order paid on its own in Scene 1.
 
 ## Scene 4: the budget is real
 

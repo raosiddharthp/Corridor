@@ -12,7 +12,7 @@ The rule is: A2A negotiates, AP2 settles. A buyer's agent asks a supplier's agen
 |---|---|---|
 | Negotiation Agent | `pipeline/negotiation.py` | Requests a quote from the supplier over A2A. Treats everything the supplier sends as untrusted. |
 | Mandate Integrity Gate | `pipeline/gate.py`, `pipeline/payment_gate.py` | Verifies the mandate chain and the supplier-signed checkout. Fails closed. |
-| Compliance Screening Gate | `pipeline/screening.py` | Screens the parties and the payment before any rail is chosen. |
+| Compliance Screening Gate | `pipeline/screening.py` | Checks the party names against a sanctions list before any rail is chosen. Fails closed. |
 | Rail Selection Engine | `pipeline/rails.py` | Chooses a payment rail for the verified total. |
 | Payment Execution Agent | `pipeline/payments.py` | Executes the payment. Idempotent on the transaction ID. |
 
@@ -20,6 +20,7 @@ The rule is: A2A negotiates, AP2 settles. A buyer's agent asks a supplier's agen
 
 - **Tier 1:** the order is within policy and pays automatically.
 - **Tier 2:** the order needs a person. The run stops at `awaiting_approval` and no payment is built.
+- **Blocked:** the order fails a check. Nothing is paid and nothing waits.
 
 The orchestrator routes on the total in the supplier-signed checkout, never on a total the supplier merely claims. If the claimed total or the checkout hash does not match, the run is blocked.
 

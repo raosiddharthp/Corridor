@@ -1,33 +1,31 @@
 """Orchestrator: runs one order through the components in order.
 
 It negotiates, verifies the supplier's signed checkout, screens, prices, builds and
-gates the payment, routes, and picks a rail. It never moves money: a Tier 1 run ends
-as ready_to_pay for the Payment Execution Agent. The price that counts is the total
-in the verified signed checkout, never the supplier's stated total.
+gates the payment, routes, picks a rail and, when an executor is configured, settles
+Tier 1 payments. Tier 2 orders wait for a human decision, which is a fresh mandate
+capped at the approved total. The price that counts is the total in the verified
+signed checkout, never the supplier's stated total.
 """
 import asyncio
 import logging
 from dataclasses import dataclass
 
-from ap2.sdk.generated.types.merchant import Merchant
-from ap2.sdk.generated.types.payment_instrument import PaymentInstrument
-
 from pipeline import checkout as co
-from pipeline import gate
 from pipeline import interpreter as itp
-from pipeline import mandates as m
 from pipeline import negotiation, rails, seed
+from pipeline.approvals import ApprovalError
 from pipeline.events import EventLogError
+from pipeline.payment_gate import gate_payment
+from pipeline.payments import PaymentError
 from pipeline.screening import screen
 from pipeline.tiering import BLOCKED, TIER1, TIER2, check_price, route
 
 log = logging.getLogger(__name__)
 
-AUD = "corridor-payment-processor"
-ACCOUNT = PaymentInstrument(id="acct_1", type="bank_account")
-
 READY = "ready_to_pay"
+PAID = "paid"
 AWAITING = "awaiting_approval"
+REJECTED = "rejected"
 BLOCKED_STATUS = "blocked"
 FAILED = "failed"
 
@@ -42,6 +40,7 @@ class RunResult:
     total_minor: int | None = None
     rail: str | None = None
     transaction_id: str | None = None
+    reference: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -53,6 +52,7 @@ class RunResult:
             "total_minor": self.total_minor,
             "rail": self.rail,
             "transaction_id": self.transaction_id,
+            "reference": self.reference,
         }
 
 
@@ -68,6 +68,8 @@ class Orchestrator:
         ledger,
         interpreter,
         quote=negotiation.request_quote,
+        executor=None,
+        approvals=None,
     ):
         self._keys = keys
         self._url = supplier_url
@@ -77,74 +79,143 @@ class Orchestrator:
         self._ledger = ledger
         self._interpreter = interpreter
         self._quote = quote
+        self._executor = executor
+        self._approvals = approvals
 
     def _emit(self, run_id, kind, data=None):
         self._events.append(run_id, kind, data)
+
+    def _crashed(self, run_id, order_ref):
+        log.exception("run failed")
+        try:
+            self._emit(run_id, "run.failed", {"reason": "internal error"})
+        except EventLogError:
+            pass
+        return RunResult(
+            run_id, order_ref, BLOCKED, FAILED, ("internal error, failing closed",)
+        )
+
+    def _failed(self, run_id, order_ref, reason):
+        self._emit(run_id, "run.failed", {"reason": reason})
+        return RunResult(run_id, order_ref, BLOCKED, FAILED, (reason,))
+
+    def _finish(self, run_id, order_ref, tier, status, reasons, **fields):
+        self._emit(run_id, "run.completed", {"status": status, "tier": tier})
+        return RunResult(run_id, order_ref, tier, status, tuple(reasons), **fields)
+
+    def _blocked(self, run_id, order_ref, reasons, total=None):
+        self._emit(run_id, "tier.decision", {"tier": BLOCKED, "reasons": list(reasons)})
+        return self._finish(
+            run_id, order_ref, BLOCKED, BLOCKED_STATUS, reasons, total_minor=total
+        )
+
+    def _settle(self, run_id, order_ref, tier, reasons, total, transaction_id):
+        choice = rails.select_rail(total)
+        self._emit(
+            run_id,
+            "rail.selected",
+            {
+                "rail": choice.rail.id if choice.rail else None,
+                "reasons": list(choice.reasons),
+            },
+        )
+        if choice.rail is None:
+            return self._finish(
+                run_id, order_ref, BLOCKED, BLOCKED_STATUS, choice.reasons, total_minor=total
+            )
+        if self._executor is None:
+            return self._finish(
+                run_id,
+                order_ref,
+                tier,
+                READY,
+                reasons,
+                total_minor=total,
+                rail=choice.rail.id,
+                transaction_id=transaction_id,
+            )
+        try:
+            receipt = self._executor.execute(
+                transaction_id=transaction_id,
+                amount_minor=total,
+                rail_id=choice.rail.id,
+            )
+        except PaymentError as exc:
+            return self._failed(run_id, order_ref, str(exc))
+        self._emit(
+            run_id,
+            "payment.executed",
+            {
+                "payment_id": receipt.payment_id,
+                "amount_minor": receipt.amount_minor,
+                "rail": receipt.rail,
+                "reference": receipt.reference,
+                "duplicate": receipt.duplicate,
+            },
+        )
+        return self._finish(
+            run_id,
+            order_ref,
+            tier,
+            PAID,
+            reasons,
+            total_minor=total,
+            rail=choice.rail.id,
+            transaction_id=transaction_id,
+            reference=receipt.reference,
+        )
 
     async def run(self, run_id: str, order: seed.Scenario) -> RunResult:
         self._emit(run_id, "run.started", {"order_ref": order.ref})
         try:
             return await self._run(run_id, order)
         except Exception:
-            log.exception("run failed")
-            try:
-                self._emit(run_id, "run.failed", {"reason": "internal error"})
-            except EventLogError:
-                pass
-            return RunResult(
-                run_id, order.ref, BLOCKED, FAILED, ("internal error, failing closed",)
-            )
+            return self._crashed(run_id, order.ref)
 
-    def _failed(self, run_id, order, reason):
-        self._emit(run_id, "run.failed", {"reason": reason})
-        return RunResult(run_id, order.ref, BLOCKED, FAILED, (reason,))
-
-    def _finish(self, run_id, order, tier, status, reasons, **fields):
-        self._emit(run_id, "run.completed", {"status": status, "tier": tier})
-        return RunResult(run_id, order.ref, tier, status, tuple(reasons), **fields)
-
-    def _blocked(self, run_id, order, reasons, total=None):
-        self._emit(run_id, "tier.decision", {"tier": BLOCKED, "reasons": list(reasons)})
-        return self._finish(
-            run_id, order, BLOCKED, BLOCKED_STATUS, reasons, total_minor=total
-        )
-
-    def _gate(self, offer, total, transaction_id):
+    def decide(self, run_id: str, approve: bool) -> RunResult:
+        """Apply a human decision to a pending Tier 2 order. Single use."""
+        if self._approvals is None:
+            raise ApprovalError("approvals are not enabled")
+        pending = self._approvals.take(run_id)
+        if pending is None:
+            raise ApprovalError("no pending approval for this run")
         try:
-            challenge = self._challenges.issue(AUD)
-            merchant = Merchant(id=seed.SUPPLIER.id, name=seed.SUPPLIER.name)
-            open_token = m.sign_open(
-                m.open_payment_mandate(
-                    payee=merchant,
-                    max_minor=seed.MANDATE_CAP_MINOR,
-                    agent_key=self._keys.agent,
-                    max_occurrences=seed.MANDATE_MAX_USES,
-                    budget_minor=seed.MANDATE_BUDGET_MINOR,
-                ),
-                self._keys.user,
-            )
-            closed = m.closed_payment_mandate(
-                transaction_id=transaction_id,
-                payee=merchant,
-                amount_minor=total,
-                instrument=ACCOUNT,
-            )
-            token = m.delegate(
-                open_token, closed, self._keys.agent, aud=AUD, nonce=challenge.nonce
-            )
-            return gate.check_order(
-                offer.checkout_jwt,
-                token,
-                supplier_public=self._keys.supplier_public,
-                user_public=m.public_only(self._keys.user),
-                aud=AUD,
-                nonce=challenge.nonce,
-                challenges=self._challenges,
-                usage=self._ledger.usage(seed.BUYER.id),
-            )
+            return self._decide(run_id, pending, approve)
         except Exception:
-            log.exception("could not build the payment")
-            return gate.GateResult(gate.GATE, False, ("payment could not be built",))
+            return self._crashed(run_id, pending.order_ref)
+
+    def _decide(self, run_id, pending, approve):
+        if not approve:
+            self._emit(run_id, "run.completed", {"status": REJECTED, "tier": TIER2})
+            return RunResult(
+                run_id,
+                pending.order_ref,
+                TIER2,
+                REJECTED,
+                ("rejected by the approver",),
+                total_minor=pending.total_minor,
+            )
+        self._emit(run_id, "approval.granted", {"total_minor": pending.total_minor})
+        mandate = gate_payment(
+            keys=self._keys,
+            challenges=self._challenges,
+            ledger=self._ledger,
+            checkout_jwt=pending.checkout_jwt,
+            total_minor=pending.total_minor,
+            transaction_id=pending.transaction_id,
+            cap_minor=pending.total_minor,
+        )
+        self._emit(
+            run_id,
+            "gate.mandate",
+            {"passed": mandate.passed, "reasons": list(mandate.reasons), "fresh_mandate": True},
+        )
+        if not mandate.passed:
+            reasons = ("mandate gate rejected the payment", *mandate.reasons)
+            return self._blocked(run_id, pending.order_ref, reasons, pending.total_minor)
+        return self._settle(
+            run_id, pending.order_ref, TIER2, (), pending.total_minor, pending.transaction_id
+        )
 
     async def _run(self, run_id, order):
         try:
@@ -152,7 +223,7 @@ class Orchestrator:
                 self._url, order.ref, http=self._http, expected_currency=seed.CURRENCY
             )
         except negotiation.NegotiationError as exc:
-            return self._failed(run_id, order, str(exc))
+            return self._failed(run_id, order.ref, str(exc))
         self._emit(
             run_id,
             "negotiation.offer",
@@ -171,17 +242,17 @@ class Orchestrator:
         except Exception:
             log.warning("supplier checkout could not be verified", exc_info=True)
             return self._blocked(
-                run_id, order, ("supplier checkout could not be verified",)
+                run_id, order.ref, ("supplier checkout could not be verified",)
             )
         if total != offer.claimed_total_minor:
             return self._blocked(
                 run_id,
-                order,
+                order.ref,
                 ("supplier's stated total differs from its signed checkout",),
             )
         if transaction_id != offer.checkout_hash:
             return self._blocked(
-                run_id, order, ("supplier's checkout hash does not match its checkout",)
+                run_id, order.ref, ("supplier's checkout hash does not match its checkout",)
             )
 
         proposal = await asyncio.to_thread(itp.propose, self._interpreter, offer.note)
@@ -202,7 +273,15 @@ class Orchestrator:
 
         mandate = None
         if price.valid and price.within_tolerance and screening.status == "clear":
-            mandate = self._gate(offer, total, transaction_id)
+            mandate = gate_payment(
+                keys=self._keys,
+                challenges=self._challenges,
+                ledger=self._ledger,
+                checkout_jwt=offer.checkout_jwt,
+                total_minor=total,
+                transaction_id=transaction_id,
+                cap_minor=seed.MANDATE_CAP_MINOR,
+            )
             self._emit(
                 run_id,
                 "gate.mandate",
@@ -227,29 +306,22 @@ class Orchestrator:
         )
 
         if tier == TIER1:
-            choice = rails.select_rail(total)
-            self._emit(
-                run_id,
-                "rail.selected",
-                {
-                    "rail": choice.rail.id if choice.rail else None,
-                    "reasons": list(choice.reasons),
-                },
-            )
-            if choice.rail is None:
-                return self._finish(
-                    run_id, order, BLOCKED, BLOCKED_STATUS, choice.reasons, total_minor=total
-                )
-            return self._finish(
-                run_id,
-                order,
-                TIER1,
-                READY,
-                reasons,
-                total_minor=total,
-                rail=choice.rail.id,
-                transaction_id=transaction_id,
-            )
+            return self._settle(run_id, order.ref, TIER1, reasons, total, transaction_id)
         if tier == TIER2:
-            return self._finish(run_id, order, TIER2, AWAITING, reasons, total_minor=total)
-        return self._finish(run_id, order, BLOCKED, BLOCKED_STATUS, reasons, total_minor=total)
+            if self._approvals is not None:
+                pending = self._approvals.add(
+                    run_id, order.ref, offer.checkout_jwt, total, transaction_id, reasons
+                )
+                self._emit(
+                    run_id,
+                    "approval.requested",
+                    {
+                        "total_minor": total,
+                        "expires_at": pending.expires_at,
+                        "reasons": reasons,
+                    },
+                )
+            return self._finish(run_id, order.ref, TIER2, AWAITING, reasons, total_minor=total)
+        return self._finish(
+            run_id, order.ref, BLOCKED, BLOCKED_STATUS, reasons, total_minor=total
+        )

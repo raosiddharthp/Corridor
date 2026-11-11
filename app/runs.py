@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict
 
 import pipeline.seed as seed
+from pipeline.approvals import ApprovalError
 from pipeline.events import to_dict
 
 ORDERS = {s.ref: s for s in (seed.FP_88213, seed.FP_88214)}
@@ -98,5 +99,24 @@ def make_router(
         if not stored:
             raise HTTPException(status_code=404, detail="unknown run")
         return {"events": [to_dict(e) for e in stored if e.seq > max(after, 0)]}
+
+    def decide(run_id: str, approve: bool):
+        if not allow():
+            raise HTTPException(status_code=429, detail="too many requests, try again shortly")
+        try:
+            result = make_orchestrator(False).decide(run_id, approve)
+        except ApprovalError:
+            raise HTTPException(
+                status_code=404, detail="no pending approval for this run"
+            ) from None
+        return {"result": result.to_dict()}
+
+    @router.post("/runs/{run_id}/approve")
+    async def approve_run(run_id: str = Path(pattern=_RUN_ID)):
+        return decide(run_id, True)
+
+    @router.post("/runs/{run_id}/reject")
+    async def reject_run(run_id: str = Path(pattern=_RUN_ID)):
+        return decide(run_id, False)
 
     return router

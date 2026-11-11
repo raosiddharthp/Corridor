@@ -8,11 +8,13 @@ import httpx
 
 from pipeline import keys as pkeys
 from pipeline import negotiation
+from pipeline.approvals import MemoryApprovalStore
 from pipeline.challenge import MemoryChallengeStore
 from pipeline.events import MemoryEventLog
 from pipeline.gemini import build_interpreter
 from pipeline.ledger import MemorySpendLedger
 from pipeline.orchestrator import Orchestrator
+from pipeline.payments import PaymentExecutor
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +32,8 @@ class Services:
     challenges: MemoryChallengeStore
     ledger: MemorySpendLedger
     interpreter: object
+    executor: PaymentExecutor
+    approvals: MemoryApprovalStore
 
 
 def build_services(env=None) -> Services:
@@ -42,14 +46,17 @@ def build_services(env=None) -> Services:
     except pkeys.KeyConfigError:
         log.error("signing keys are missing or invalid", exc_info=True)
         raise NotConfigured("signing keys are not configured") from None
+    ledger = MemorySpendLedger()
     return Services(
         keys=key_set,
         supplier_url=url,
         http=httpx.AsyncClient(timeout=10),
         events=MemoryEventLog(),
         challenges=MemoryChallengeStore(),
-        ledger=MemorySpendLedger(),
+        ledger=ledger,
         interpreter=build_interpreter(env),
+        executor=PaymentExecutor(ledger),
+        approvals=MemoryApprovalStore(),
     )
 
 
@@ -69,6 +76,8 @@ def orchestrator_factory(services: Services):
             ledger=services.ledger,
             interpreter=services.interpreter,
             quote=quote,
+            executor=services.executor,
+            approvals=services.approvals,
         )
 
     return make

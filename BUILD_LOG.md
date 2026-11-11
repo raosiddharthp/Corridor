@@ -126,3 +126,11 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 - **Symptom:** `400 FAILED_PRECONDITION: User location is not supported for the API use`, from both the Python SDK and plain `curl`. The key was valid (a bad key gives 401), and the connection reported SG on IPv4 and IPv6.
 - **Decision:** the interpreter defaults to the rule-based stand-in. Gemini stays behind the config switch.
 - **Lesson:** a failing optional model must fail closed, and that has a cost. With `INTERPRETER=gemini` left on, every note would escalate and a Tier 1 payment would quietly become Tier 2. Default to the mode that works, and make the model opt-in.
+
+## UI and pause rules
+
+### Old pause tests probed /docs
+- **Symptom:** two cost-safety tests failed after the UI change. The live one expected `/docs` to return 200, the paused one expected 503 from it.
+- **Cause:** the tests used `/docs` as a convenient "any other endpoint". I then switched `/docs` off in the deployed app and relaxed the pause rule so the UI page stays readable. The tests had encoded both old facts by accident, and I did not know the file existed.
+- **Fix:** the tests now state the policy. Runs, approvals, reset and every write return 503 when paused. Health, config and the UI page stay up.
+- **Lesson:** before changing a rule, search the tests for who depends on it. Tests should assert the policy, not an incidental endpoint. The commit script held the commit back until the tests were right.

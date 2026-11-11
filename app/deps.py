@@ -81,3 +81,11 @@ def orchestrator_factory(services: Services):
         )
 
     return make
+
+
+def reset_demo_state(services: Services) -> None:
+    """Demo only: clear spend history and pending approvals. Event history is kept."""
+    ledger = MemorySpendLedger()
+    services.ledger = ledger
+    services.executor = PaymentExecutor(ledger)
+    services.approvals = MemoryApprovalStore()

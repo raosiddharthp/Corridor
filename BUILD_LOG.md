@@ -2,6 +2,16 @@
 
 Mistakes, dead ends and variations from building Corridor, in the order they happened. Each entry: what happened, the cause, the fix, and what to do differently.
 
+## Lessons at a glance
+
+1. **A test has to measure the thing it names.** The first prompt-injection test checked the wrong property, and the old pause tests probed a page that had since been switched off. Both passed or failed for the wrong reason.
+2. **Check what you ran, not what you meant to run.** Files that were never created left the suite unchanged, and a `tail` on a command hid the error the next step depended on.
+3. **Wait for the cloud.** New service accounts and removed access both take a minute or more to show up, and a check made too early gives a false result.
+4. **Read recorded events, not impressions.** The kill switch was proven by its structured log entries, not by whether a search for text found anything.
+5. **Document after running, not before.** The hostile-note walkthrough was first written from the design. The live app behaved differently, and the guides were corrected.
+6. **Count properly.** Two expected test totals were wrong because of arithmetic, not code.
+7. **Treat a blocked dependency as a design input.** The Gemini model refused the build environment's location, so the rule-based interpreter is the default and the Gemini one stays built, tested and switched off.
+
 ## Setup and cost safety
 
 ### Almost repointed another project's gcloud config
@@ -41,6 +51,10 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 ### Tests ran fine under one command and not another
 - **What happened:** bare `pytest` could not import the SDK, while `python -m pytest` could.
 - **Status:** worked around with `python -m pytest`. Root cause not investigated.
+
+### Test counts as a signal
+- **What happened:** predicted pass counts were wrong twice (parametrised cases each count as a test, and one count was simply miscounted). Once, the count did not move at all after a step because the new files had not been written.
+- **Lesson:** compare against the previous count, not a prediction. A count that stays put after adding tests is the cheapest sign that nothing was applied.
 
 ## AP2 mandates
 
@@ -85,12 +99,6 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 - **Finding:** the checkout chain only decodes the payload of the supplier's signed order. Nothing in it verifies the signature, and the SDK never computes the checkout hash, it only compares one.
 - **Decision:** the gate verifies the supplier's signature against a key it already trusts, and recomputes the hash itself (base64url of SHA-256 over the signed JWT string).
 - **Lesson:** "verify" in a library can mean "parse and check constraints". Read what it actually checks.
-
-## Working habits (continued)
-
-### Test counts as a signal
-- **What happened:** predicted pass counts were wrong twice (parametrised cases each count as a test, and one count was simply miscounted). Once, the count did not move at all after a step because the new files had not been written.
-- **Lesson:** compare against the previous count, not a prediction. A count that stays put after adding tests is the cheapest sign that nothing was applied.
 
 ## Keys and services
 
@@ -146,3 +154,11 @@ The cost guard's list of services is a comma-separated environment value. gcloud
 ## Deployment: proving the kill switch
 
 A synthetic budget message at the cap (name corridor-cap, cost equal to limit) locks both services. It works, but my first reading of the test was wrong twice. The guard prints structured JSON, which the log reader shows as blank text, so a grep on message text found nothing. And Cloud Run takes a minute or more to apply an IAM removal, so a check right after the event still saw HTTP 200. Reading the structured log (jsonPayload.event) and polling until the status changes gave the real answer. Lesson: test a safety control by its recorded events and wait for propagation before concluding that it failed. Real billing notifications arrive about every 20 minutes and are ignored below the cap, which the log also shows.
+
+## Documentation: describing behaviour before running it
+
+The demo script and user guide first said that a hostile supplier note on FP-88213 would still let the order pay. The live app instead stopped it for human review, with the reason "supplier note flagged for review". The design was right and my description was wrong: untrusted text may add a review but can never remove a check. I only found out by running it against the deployed service. Both guides were corrected. Lesson: write what a system does after watching it do it, and keep the labels in the guide identical to the ones on the screen.
+
+## Not measured
+
+Actual cloud spend was not measured for this log. The design relies on free-tier allowances and a budget cap with a tested kill switch, but no billing report is recorded here. The Gemini interpreter has never run against the live model from the build environment. Both gaps are stated plainly so nobody reads a claim into their absence.

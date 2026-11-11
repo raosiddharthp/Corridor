@@ -92,6 +92,6 @@ A `failed` run means something went wrong outside the payment checks, for exampl
 
 **The first run is slow or fails with "supplier could not be reached".** The services are waking up. Wait ten seconds and run again.
 
-**A banner says the demo is paused.** The owner has switched runs off. The page stays visible, and nothing can be run.
+**A banner says Corridor is paused to protect its spend cap.** The owner has switched runs off until it resumes. You can still read the page, but nothing can be run.
 
 **The page doesn't load, or every request fails.** The automatic cost guard may have locked the services because the monthly budget was reached. The owner can restore access.

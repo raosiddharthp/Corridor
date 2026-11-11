@@ -70,11 +70,11 @@ Five components. Each does exactly one job. Nothing auto-signs a payment without
 ```mermaid
 flowchart LR
     A[Negotiation Agent<br/><i>LLM · A2A</i>] --> B{Mandate Integrity Gate<br/><i>deterministic</i>}
-    B -- fail --> H1[Tier 2: human approval<br/>Cart Mandate reviewed manually]
+    B -- fail --> H1[Tier 2: human approval<br/>Signed checkout reviewed manually]
     B -- pass --> C{Compliance Screening Gate<br/><i>deterministic · sanctions/AML</i>}
     C -- hit --> H1
     C -- clear --> D[Rail Selection Engine<br/><i>deterministic · cost/speed</i>]
-    D --> E[Payment Execution Agent<br/><i>AP2 · signs Payment Mandate</i>]
+    D --> E[Payment Execution Agent<br/><i>AP2 · closed mandate, simulated settlement</i>]
     H1 -.-> E
 
     style B fill:#fdf0ec,stroke:#e8a090
@@ -84,11 +84,13 @@ flowchart LR
 
 | Component | Type | Single responsibility |
 |---|---|---|
-| Negotiation Agent | LLM, A2A-speaking | Negotiate terms with the counterparty's agent within Intent Mandate bounds |
-| Mandate Integrity Gate | Deterministic | Independently re-derive whether the negotiated Cart Mandate satisfies the original Intent Mandate — never trusts the Negotiation Agent's own report |
+| Negotiation Agent | LLM, A2A-speaking | Negotiate terms with the counterparty's agent within the bounds of the buyer's open mandate |
+| Mandate Integrity Gate | Deterministic | Independently re-derive whether the supplier's signed checkout satisfies the buyer's open mandate — never trusts the Negotiation Agent's own report |
 | Compliance Screening Gate | Deterministic | Sanctions / AML screening, isolated and independently testable |
 | Rail Selection Engine | Deterministic | Choose the cheapest, fastest available settlement rail for the corridor — never an LLM judgment call |
-| Payment Execution Agent | AP2 | Sign and submit the Payment Mandate; nothing upstream of this can sign a payment directly |
+| Payment Execution Agent | AP2 | Execute the payment against the verified closed mandate (simulated here); nothing upstream of this can pay directly |
+
+**Terms.** The design document was written against AP2 v0.1 (Intent, Cart and Payment Mandate). The build uses AP2 v0.2: the Intent Mandate became the *open mandate*, the Cart Mandate became the *supplier-signed checkout*, and the Payment Mandate became the *closed mandate*. The glossary in [§10](index.html#s10) maps them.
 
 **On trust, specifically:** the Mandate Integrity Gate is deliberately designed to distrust the component immediately upstream of it. The Negotiation Agent's context window is the surface most exposed to a counterparty's input — so the gate re-derives compliance from the raw negotiated terms, not from what the Negotiation Agent says it agreed to.
 
@@ -97,7 +99,7 @@ flowchart LR
 1. **Single responsibility, always.** No component does more than one job. A negotiation agent negotiates; it does not also decide whether the deal is safe.
 2. **Deterministic where a wrong answer is expensive.** Rail selection and integrity checking are plain code against known parameters — never an LLM asked to "judge" a financial outcome.
 3. **Gates don't trust their inputs.** Every gate independently re-verifies against ground truth rather than consuming an upstream agent's summary.
-4. **Human oversight sits where the human already gave authority — not everywhere by default.** Corridor doesn't require a signature on every transaction; it requires strict adherence to the bounds the human already set via the Intent Mandate, and routes anything outside those bounds to a person. That's a deliberate, load-bearing design choice, argued for explicitly in [ADR-CR-03](corridor-design-doc.html#s10).
+4. **Human oversight sits where the human already gave authority — not everywhere by default.** Corridor doesn't require a signature on every transaction; it requires strict adherence to the bounds the human already set via the open mandate, and routes anything outside those bounds to a person. That's a deliberate, load-bearing design choice, argued for explicitly in [ADR-CR-03](index.html#s10).
 5. **Observability is one log table, not a platform.** AP2 already provides cryptographic non-repudiation. Corridor's logging adds operational visibility on top — gate decisions, rail choice, timing — feeding the existing treasury dashboard rather than standing up a parallel system.
 
 ## Regulatory grounding — three jurisdictions, one transaction
@@ -115,7 +117,7 @@ The GENIUS Act line is the one worth reading twice: **there is no US counterpart
 
 ## Architecture Decision Records
 
-Six ADRs, each with rejected alternatives named explicitly — not just the decision that won:
+Eight ADRs, each with rejected alternatives named explicitly — not just the decision that won:
 
 - **ADR-CR-01** — Five single-responsibility gated components, not one end-to-end agent or a larger composite platform
 - **ADR-CR-02** — Rail Selection Engine is deterministic, never LLM-scored
@@ -123,20 +125,25 @@ Six ADRs, each with rejected alternatives named explicitly — not just the deci
 - **ADR-CR-04** — Mandate Integrity Gate never trusts the Negotiation Agent's self-report
 - **ADR-CR-05** — Compliance screening is a separate deterministic step, never folded into an LLM's reasoning
 - **ADR-CR-06** — One structured event log, feeding an existing dashboard, not a new observability platform
+- **ADR-CR-07** — The gate recomputes every check itself and cross-checks the SDK's verdict; any disagreement blocks the payment
+- **ADR-CR-08** — Tier 2 approval creates a fresh, capped, user-signed mandate through the same gate; approval never loosens a check
 
-Full rationale for each lives in [`corridor-design-doc.html`, §10](corridor-design-doc.html#s10).
+Full rationale for each lives in [the design document, §10](index.html#s10).
 
 ## What's built vs. what's designed — stated plainly
 
-This is a systems-design and protocol-literacy portfolio piece, not a production deployment, and it's more useful to you if that's clear up front rather than discovered in conversation:
+This is a systems-design and protocol-literacy portfolio piece with a working proof of concept, not a production deployment. It is more useful to you if the line between the two is clear up front:
 
-- ✅ Full architecture, ADRs, regulatory obligation mapping, and rollout roadmap — complete
-- ✅ Interactive agent-trace simulator demonstrating both the happy path and the integrity-gate failure path — complete, runs client-side, no backend
-- ⬜ Real A2A negotiation session against a live counterparty agent — not built
-- ⬜ Real AP2 Mandate signing and settlement — not built
-- ⬜ Production Compliance Screening Gate against a live sanctions list — not built
+- ✅ Architecture, ADRs (CR-01 to CR-08), regulatory obligation mapping and rollout roadmap — complete
+- ✅ Interactive agent-trace simulator in the design document — complete, runs client-side
+- ✅ Real A2A negotiation between the buyer's agent and a separate supplier service, both running on Cloud Run
+- ✅ Real AP2 v0.2 mandate chains, signed and verified with the SDK, behind a fail-closed Mandate Integrity Gate
+- ✅ Tier 1 and Tier 2 routing, single-use approvals, a spend ledger and a budget-triggered kill switch
+- ⬜ Settlement is simulated: no real money moves and no real payment rail is called
+- ⬜ Sanctions screening runs against a fixed demo list, not a live one
+- ⬜ Live counterparty agents, durable storage and a user-held signing key — not built
 
-The honest reason: A2A and AP2 are genuinely new (AP2 v0.2 shipped April 2026), counterparty agents to negotiate against in the wild are scarce, and a system touching real sanctions screening and real payment rails is not something to stand up carelessly as a demo. What's here is the design work that should precede that build — the same discipline a real engineering team would want to see before writing the first line of settlement code.
+The honest reason: AP2 v0.2 shipped only in April 2026, counterparty agents to negotiate against in the wild are scarce, and a system touching real sanctions screening and real payment rails is not something to stand up carelessly as a demo. The proof of concept runs the full decision path against a simulated supplier and a simulated payment, so you can watch the gates work with nothing at stake.
 
 ## Rollout roadmap
 

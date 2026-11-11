@@ -650,6 +650,28 @@ footer.doc-footer { border-top: 1px solid var(--border); padding: 2.5rem; text-a
       <div class="adr-row"><strong>Decision:</strong> Corridor's logging adds operational observability — gate decisions, rail choice, timing — on top of AP2's cryptographic layer, rather than re-deriving proof AP2 already provides. Output feeds Sandberg's existing liquidity dashboard directly.</div>
       <div class="adr-row"><strong>Status:</strong> Accepted.</div>
     </div>
+
+    <div class="adr-card">
+      <div class="adr-head"><span class="adr-id">ADR-CR-07</span><span class="adr-title">The Mandate Integrity Gate recomputes every check and cross-checks the SDK's verdict</span></div>
+      <div class="adr-row"><strong>Context:</strong> The AP2 SDK verifies signatures and mandate constraints, but a gate that simply relays one library's yes or no is only as strong as that library and its call site.</div>
+      <div class="adr-row"><strong>Decision:</strong> The gate independently recomputes each check from the raw signed checkout and the open mandate, then compares its own result with the SDK's verdict. Any disagreement, and any doubt, is a rejection. The nonce is consumed first, so a failed attempt cannot be replayed.</div>
+      <div class="adr-row"><strong>Status:</strong> Accepted. Implemented in the live proof of concept.</div>
+    </div>
+
+    <div class="adr-card">
+      <div class="adr-head"><span class="adr-id">ADR-CR-08</span><span class="adr-title">Tier 2 approval is a fresh, capped, user-signed mandate, never a loosened gate</span></div>
+      <div class="adr-row"><strong>Context:</strong> When a person approves an order that exceeded policy, the easy implementation raises the cap or skips the failed check, which turns every approval into a hole in the gate.</div>
+      <div class="adr-row"><strong>Decision:</strong> Approval signs a new mandate capped at exactly the approved total, with the same budget and use limits and a new nonce, and sends it through the same gate. The approval itself is single use and expires after 15 minutes.</div>
+      <div class="adr-row"><strong>Status:</strong> Accepted. Implemented in the live proof of concept.</div>
+    </div>
+
+    <div class="adr-card">
+      <div class="adr-head"><span class="adr-id">Glossary</span><span class="adr-title">Design terms (AP2 v0.1) and build terms (AP2 v0.2)</span></div>
+      <div class="adr-row"><strong>Intent Mandate → open mandate:</strong> the buyer's signed standing permission, holding the limits: cap per payment, budget, number of uses and frequency.</div>
+      <div class="adr-row"><strong>Cart Mandate → supplier-signed checkout:</strong> the order the supplier signs. The payment is bound to its hash, so the transaction ID is the checkout hash.</div>
+      <div class="adr-row"><strong>Payment Mandate → closed mandate:</strong> the single payment authorisation, delegated by the agent's key and checked against the open mandate.</div>
+      <div class="adr-row"><strong>Tier 1 and Tier 2:</strong> automatic payment within the open mandate, and payment that waits for a person. A third outcome, blocked, pays nothing.</div>
+    </div>
   </section>
 
   <!-- ============ SECTION 11 ============ -->

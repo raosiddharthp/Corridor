@@ -200,6 +200,9 @@ footer.doc-footer { border-top: 1px solid var(--border); padding: 2.5rem; text-a
   .card-grid { grid-template-columns: 1fr; }
   .stat-grid { grid-template-columns: repeat(2,1fr); }
 }
+.launch-btn { font-family: var(--mono); font-size: 11px; font-weight: 500; text-decoration: none; padding: 6px 12px; border-radius: 99px; background: var(--text); color: var(--bg); border: 1px solid var(--text); transition: background 0.15s, color 0.15s; }
+.launch-btn:hover { background: var(--teal); border-color: var(--teal); }
+.launch-btn[aria-disabled="true"] { background: transparent; color: var(--text3); border-color: var(--border2); pointer-events: none; }
 </style>
 </head>
 <body>
@@ -237,7 +240,8 @@ footer.doc-footer { border-top: 1px solid var(--border); padding: 2.5rem; text-a
 <div class="main">
   <div class="topbar">
     <div class="topbar-breadcrumb">farside-payments / corridor / design-doc</div>
-    <div class="topbar-right"><span class="topbar-tag">fictional client — portfolio artefact</span></div>
+    <div class="topbar-right">
+    <a id="launch-poc" class="launch-btn" href="#" aria-disabled="true" rel="noopener">Launch live POC</a><span class="topbar-tag">fictional client — portfolio artefact</span></div>
   </div>
 
   <div class="content">
@@ -815,6 +819,21 @@ window.addEventListener('scroll', () => {
   sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
   links.forEach(a => { const href = a.getAttribute('href').replace('#',''); a.classList.toggle('active', href === current); });
 }, { passive: true });
+</script>
+<script>
+// Set LIVE_POC_URL to the deployed address to enable the Launch live POC button.
+(function () {
+  var LIVE_POC_URL = "";
+  var btn = document.getElementById("launch-poc");
+  if (!btn) return;
+  if (LIVE_POC_URL) {
+    btn.href = LIVE_POC_URL;
+    btn.target = "_blank";
+    btn.removeAttribute("aria-disabled");
+  } else {
+    btn.title = "The live proof of concept is not deployed yet";
+  }
+})();
 </script>
 </body>
 </html>

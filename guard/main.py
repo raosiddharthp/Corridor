@@ -7,7 +7,7 @@ from google.cloud import run_v2
 
 PROJECT = os.environ["GCP_PROJECT"]
 REGION = os.environ.get("REGION", "europe-west2")
-SERVICES = os.environ.get("GUARDED_SERVICES", "corridor-app").split(",")
+SERVICES = os.environ.get("GUARDED_SERVICES", "corridor-app,corridor-supplier").split(",")
 BUDGET_NAME = "corridor-cap"
 
 

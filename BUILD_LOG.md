@@ -138,3 +138,7 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 ## Deployment: IAM propagation
 
 Creating two service accounts and binding secret access in one script failed for the second account ("does not exist"), and the supplier revision then failed to start with a permission error on its secret. The accounts exist moments after creation, but other IAM calls do not see them straight away. Fix: repeat the binding and deploy again. Lesson: after creating a service account, verify the binding with get-iam-policy before deploying. The app failed closed in the meantime: with no supplier, the run ended as failed and nothing was paid.
+
+## Deployment: commas in gcloud environment values
+
+The cost guard's list of services is a comma-separated environment value. gcloud also uses commas to separate KEY=value pairs, so the update was rejected as a malformed second pair. A `| tail -3` on the command hid the error and the follow-up check showed the old value unchanged. Two fixes: give gcloud another pair separator (`^@^KEY=a,b`), and never trim a command's output when the next step depends on it succeeding. The guard function is also redeployed as a function, not patched as the Cloud Run service beneath it, so its source and live setting agree.

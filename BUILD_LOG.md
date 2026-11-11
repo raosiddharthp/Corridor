@@ -134,3 +134,7 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 - **Cause:** the tests used `/docs` as a convenient "any other endpoint". I then switched `/docs` off in the deployed app and relaxed the pause rule so the UI page stays readable. The tests had encoded both old facts by accident, and I did not know the file existed.
 - **Fix:** the tests now state the policy. Runs, approvals, reset and every write return 503 when paused. Health, config and the UI page stay up.
 - **Lesson:** before changing a rule, search the tests for who depends on it. Tests should assert the policy, not an incidental endpoint. The commit script held the commit back until the tests were right.
+
+## Deployment: IAM propagation
+
+Creating two service accounts and binding secret access in one script failed for the second account ("does not exist"), and the supplier revision then failed to start with a permission error on its secret. The accounts exist moments after creation, but other IAM calls do not see them straight away. Fix: repeat the binding and deploy again. Lesson: after creating a service account, verify the binding with get-iam-policy before deploying. The app failed closed in the meantime: with no supplier, the run ended as failed and nothing was paid.

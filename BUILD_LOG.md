@@ -119,3 +119,10 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 - **Cause:** the instruction text names both delimiters, so one closing tag is always there before the note. The note was escaped correctly; the assertion was wrong.
 - **Fix:** compare against the prompt for a harmless note, so the test asserts that a hostile note adds no extra delimiter.
 - **Lesson:** assert the property you care about ("the attacker adds nothing"), not a literal count that depends on unrelated text.
+
+## Model access
+
+### Gemini API refused every call from Singapore
+- **Symptom:** `400 FAILED_PRECONDITION: User location is not supported for the API use`, from both the Python SDK and plain `curl`. The key was valid (a bad key gives 401), and the connection reported SG on IPv4 and IPv6.
+- **Decision:** the interpreter defaults to the rule-based stand-in. Gemini stays behind the config switch.
+- **Lesson:** a failing optional model must fail closed, and that has a cost. With `INTERPRETER=gemini` left on, every note would escalate and a Tier 1 payment would quietly become Tier 2. Default to the mode that works, and make the model opt-in.

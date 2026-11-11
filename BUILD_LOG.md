@@ -111,3 +111,11 @@ Mistakes, dead ends and variations from building Corridor, in the order they hap
 ### Committed red, again
 - **What happened:** the supplier tests were committed with five failures because the "only if green" rule depended on someone reading the output.
 - **Fix:** a small script (`scripts/commit_if_green.sh`) now runs the suite and refuses to commit on failure.
+
+## Prompt injection
+
+### A safety test measured the wrong thing
+- **Symptom:** a test expecting one closing delimiter in the model prompt found two.
+- **Cause:** the instruction text names both delimiters, so one closing tag is always there before the note. The note was escaped correctly; the assertion was wrong.
+- **Fix:** compare against the prompt for a harmless note, so the test asserts that a hostile note adds no extra delimiter.
+- **Lesson:** assert the property you care about ("the attacker adds nothing"), not a literal count that depends on unrelated text.

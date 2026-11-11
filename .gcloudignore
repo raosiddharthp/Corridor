@@ -1,0 +1,12 @@
+.git
+.venv
+.env
+*.pem
+*.key
+/tests
+/guard
+/scripts
+__pycache__
+.pytest_cache
+*.md
+/index.html

@@ -1,10 +1,12 @@
 .venv
 .git
 tests
-supplier
+guard
+scripts
 __pycache__
 .pytest_cache
 .env
 *.pem
 *.key
-guard
+*.md
+index.html
